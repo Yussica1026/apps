@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="俄语单词">
+<link rel="apple-touch-icon" href="icons/flash.png">
+<title>俄语单词卡</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}body{font-family:-apple-system,'PingFang SC',sans-serif;background:linear-gradient(160deg,#1a1a2e,#16213e);min-height:100vh;min-height:100dvh;color:#e0e0e0;display:flex;flex-direction:column;align-items:center;padding-top:env(safe-area-inset-top)}
+.top{text-align:center;padding:24px 20px 10px}.top h1{font-size:20px;color:#b8c8e3}.top p{font-size:12px;color:#7a8aaa;margin-top:4px}
+.prog{display:flex;align-items:center;gap:8px;margin:10px 0;font-size:12px;color:#7a8aaa}
+.prog-bar{flex:1;height:4px;background:rgba(255,255,255,.08);border-radius:2px;overflow:hidden;max-width:200px}
+.prog-fill{height:100%;background:linear-gradient(90deg,#8a9ac7,#b8c8e3);border-radius:2px;transition:width .4s}
+.card-wrap{perspective:800px;width:90%;max-width:340px;height:240px;margin:20px auto;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.card-inner{position:relative;width:100%;height:100%;transition:transform .5s;transform-style:preserve-3d}
+.card-wrap.flipped .card-inner{transform:rotateY(180deg)}
+.card-face{position:absolute;inset:0;backface-visibility:hidden;border-radius:20px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center}
+.card-front{background:linear-gradient(135deg,rgba(184,200,227,.1),rgba(138,154,199,.08));border:1px solid rgba(184,200,227,.2)}
+.card-back{background:linear-gradient(135deg,rgba(138,199,160,.1),rgba(184,227,200,.08));border:1px solid rgba(138,199,160,.2);transform:rotateY(180deg)}
+.card-ru{font-size:32px;color:#b8c8e3;margin-bottom:8px;letter-spacing:2px}
+.card-hint{font-size:12px;color:#7a8aaa;font-style:italic}
+.card-zh{font-size:24px;color:#8ac7a0;margin-bottom:6px}
+.card-ex{font-size:13px;color:#9cb8c4;line-height:1.6}
+.btns{display:flex;gap:12px;margin:20px auto;justify-content:center}
+.btns button{padding:12px 24px;border-radius:20px;border:1px solid;font-size:14px;font-family:inherit;cursor:pointer;background:transparent;transition:.2s}
+.btns button:active{transform:scale(.94)}
+.btn-know{border-color:rgba(138,199,160,.4);color:#8ac7a0}
+.btn-again{border-color:rgba(199,138,138,.4);color:#c78a8a}
+.btn-next{border-color:rgba(184,200,227,.4);color:#b8c8e3}
+.counter{font-size:12px;color:#5a6a7a;text-align:center;margin-top:10px}
+.cat-bar{display:flex;gap:6px;margin:12px auto;flex-wrap:wrap;justify-content:center;padding:0 20px}
+.cat-btn{padding:6px 12px;border:1px solid rgba(184,200,227,.2);border-radius:14px;background:transparent;color:#7a8aaa;font-size:11px;font-family:inherit;cursor:pointer}
+.cat-btn.on{background:rgba(184,200,227,.15);border-color:#8a9ac7;color:#b8c8e3}
+</style>
+</head>
+<body>
+<div class="top"><h1>🇷🇺 俄语单词卡</h1><p>翻转卡片 · 记住了就标会</p></div>
+<div class="cat-bar" id="cats"></div>
+<div class="prog"><span id="progLabel">0/0</span><div class="prog-bar"><div class="prog-fill" id="pf" style="width:0"></div></div></div>
+<div class="card-wrap" id="cardWrap" onclick="flip()"><div class="card-inner" id="cardInner"><div class="card-face card-front" id="front"></div><div class="card-face card-back" id="back"></div></div></div>
+<div class="btns"><button class="btn-again" onclick="markAgain()">再看</button><button class="btn-next" onclick="nextCard()">下一个</button><button class="btn-know" onclick="markKnow()">会了</button></div>
+<div class="counter" id="counter"></div>
+<script>
+const WORDS=[
+  {ru:"Здравствуйте",zh:"您好",ex:"Здравствуйте, как дела?",cat:"日常"},
+  {ru:"Спасибо",zh:"谢谢",ex:"Спасибо за помощь!",cat:"日常"},
+  {ru:"Пожалуйста",zh:"请/不客气",ex:"Пожалуйста, садитесь.",cat:"日常"},
+  {ru:"Извините",zh:"对不起/打扰一下",ex:"Извините, где метро?",cat:"日常"},
+  {ru:"Хорошо",zh:"好",ex:"Хорошо, я согласен.",cat:"日常"},
+  {ru:"Музыка",zh:"音乐",ex:"Я люблю музыку.",cat:"音乐"},
+  {ru:"Гобой",zh:"双簧管",ex:"Она играет на гобое.",cat:"音乐"},
+  {ru:"Концерт",zh:"音乐会/协奏曲",ex:"Концерт для гобоя.",cat:"音乐"},
+  {ru:"Репетиция",zh:"排练",ex:"Репетиция в три часа.",cat:"音乐"},
+  {ru:"Оркестр",zh:"管弦乐团",ex:"Симфонический оркестр.",cat:"音乐"},
+  {ru:"Университет",zh:"大学",ex:"Я учусь в университете.",cat:"学校"},
+  {ru:"Преподаватель",zh:"教师",ex:"Мой преподаватель строгий.",cat:"学校"},
+  {ru:"Экзамен",zh:"考试",ex:"Экзамен завтра.",cat:"学校"},
+  {ru:"Библиотека",zh:"图书馆",ex:"Я иду в библиотеку.",cat:"学校"},
+  {ru:"Погода",zh:"天气",ex:"Какая сегодня погода?",cat:"生活"},
+  {ru:"Завтрак",zh:"早餐",ex:"Что на завтрак?",cat:"生活"},
+  {ru:"Магазин",zh:"商店",ex:"Я иду в магазин.",cat:"生活"},
+  {ru:"Автобус",zh:"公共汽车",ex:"Автобус номер пять.",cat:"生活"},
+  {ru:"Любовь",zh:"爱",ex:"Любовь — это всё.",cat:"❤️"},
+  {ru:"Скучаю",zh:"想念",ex:"Я скучаю по тебе.",cat:"❤️"},
+  {ru:"Красивый",zh:"美丽的",ex:"Ты очень красивая.",cat:"❤️"},
+  {ru:"Счастье",zh:"幸福",ex:"Ты — моё счастье.",cat:"❤️"},
+  {ru:"Партитура",zh:"总谱",ex:"Изучаю партитуру.",cat:"音乐"},
+  {ru:"Трость",zh:"哨片",ex:"Мне нужна новая трость.",cat:"音乐"},
+];
+const CATS=["全部",...new Set(WORDS.map(w=>w.cat))];
+let cat="全部",deck=[],idx=0,known=new Set();
+function loadKnown(){try{known=new Set(JSON.parse(localStorage.getItem("yj-flash-known"))||[])}catch(e){}}
+function saveKnown(){localStorage.setItem("yj-flash-known",JSON.stringify([...known]))}
+function buildDeck(){deck=(cat==="全部"?WORDS:WORDS.filter(w=>w.cat===cat)).filter(w=>!known.has(w.ru));if(!deck.length)deck=cat==="全部"?[...WORDS]:WORDS.filter(w=>w.cat===cat);idx=0;showCard()}
+function showCard(){
+  const w=deck[idx];if(!w)return;
+  document.getElementById("cardWrap").classList.remove("flipped");
+  document.getElementById("front").innerHTML=`<div class="card-ru">${w.ru}</div><div class="card-hint">点击翻转</div>`;
+  document.getElementById("back").innerHTML=`<div class="card-zh">${w.zh}</div><div class="card-ex">${w.ex}</div>`;
+  const total=cat==="全部"?WORDS.length:WORDS.filter(w=>w.cat===cat).length;
+  const k=cat==="全部"?known.size:[...known].filter(r=>WORDS.find(w=>w.ru===r&&w.cat===cat)).length;
+  document.getElementById("progLabel").textContent=`${k}/${total} 已掌握`;
+  document.getElementById("pf").style.width=(k/total*100)+"%";
+  document.getElementById("counter").textContent=`第 ${idx+1} / ${deck.length} 张`;
+}
+function flip(){document.getElementById("cardWrap").classList.toggle("flipped")}
+function nextCard(){idx=(idx+1)%deck.length;showCard()}
+function markKnow(){const w=deck[idx];if(w){known.add(w.ru);saveKnown()}nextCard()}
+function markAgain(){const w=deck[idx];if(w){known.delete(w.ru);saveKnown()}nextCard()}
+function renderCats(){document.getElementById("cats").innerHTML=CATS.map(c=>`<button class="cat-btn${cat===c?" on":""}" onclick="cat='${c}';buildDeck();renderCats()">${c}</button>`).join("")}
+loadKnown();renderCats();buildDeck();
+</script>
+</body>
+</html>

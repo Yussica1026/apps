@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="朋友们日记">
+<link rel="apple-touch-icon" href="icons/diary.png">
+<title>朋友们日记</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{font-family:'Georgia','Songti SC',serif;background:linear-gradient(160deg,#e8f4f8,#f0f7ff 30%,#faf5f0 70%);color:#3a3a3a;min-height:100vh;min-height:100dvh}
+.bar{display:flex;gap:0;background:rgba(255,255,255,.7);backdrop-filter:blur(10px);border-bottom:1px solid rgba(173,216,230,.3);padding-top:env(safe-area-inset-top)}
+.bar button{flex:1;padding:14px 8px;border:none;background:none;font-family:inherit;font-size:14px;color:#7ba7bc;cursor:pointer;transition:.2s}
+.bar button.on{color:#4a7c8a;font-weight:700;border-bottom:2px solid #4a7c8a}
+.wrap{max-width:480px;margin:0 auto;padding:16px}
+.date-nav{display:flex;align-items:center;justify-content:center;gap:16px;padding:16px 0}
+.date-nav button{width:36px;height:36px;border:1px solid rgba(173,216,230,.4);border-radius:50%;background:rgba(255,255,255,.6);font-size:18px;color:#7ba7bc;cursor:pointer;font-family:inherit}
+.date-main{font-size:26px;font-weight:700;color:#4a7c8a;text-align:center}
+.date-sub{font-size:12px;color:#9cb8c4;text-align:center;margin-top:2px}
+.today-b{display:inline-block;padding:2px 8px;border-radius:10px;background:rgba(173,216,230,.4);color:#4a7c8a;font-size:10px;margin-left:4px}
+.sec{margin-top:16px}
+.sec-l{font-size:12px;color:#9cb8c4;margin-bottom:8px;font-style:italic}
+.moods{display:flex;flex-wrap:wrap;gap:6px}
+.mood-b{display:flex;flex-direction:column;align-items:center;padding:6px 8px;border:1px solid rgba(173,216,230,.3);border-radius:10px;background:rgba(255,255,255,.5);cursor:pointer;min-width:48px;font-family:inherit;transition:.2s}
+.mood-b.on{background:rgba(173,216,230,.35);border-color:#7ba7bc;transform:scale(1.05)}
+.mood-b span:first-child{font-size:18px}
+.mood-b span:last-child{font-size:9px;color:#9cb8c4}
+.wx{display:flex;gap:6px}
+.wx button{width:40px;height:40px;border:1px solid rgba(173,216,230,.3);border-radius:10px;background:rgba(255,255,255,.5);font-size:18px;cursor:pointer;font-family:inherit;transition:.2s}
+.wx button.on{background:rgba(173,216,230,.35);border-color:#7ba7bc;transform:scale(1.06)}
+textarea{width:100%;padding:14px;border:1px solid rgba(173,216,230,.3);border-radius:14px;background:rgba(255,255,255,.6);font-size:15px;line-height:1.9;color:#3a3a3a;font-family:inherit;resize:vertical;outline:none;min-height:180px;-webkit-appearance:none}
+textarea:focus{border-color:#7ba7bc}
+.cc{text-align:right;font-size:10px;color:#bdd4de;margin-top:4px}
+.saved{position:fixed;top:20px;right:16px;padding:6px 14px;border-radius:16px;background:rgba(74,124,138,.9);color:#fff;font-size:12px;z-index:99;animation:fadein .3s}
+@keyframes fadein{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
+.card{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:12px;background:rgba(255,255,255,.55);border:1px solid rgba(173,216,230,.2);margin-bottom:8px;cursor:pointer;transition:.2s}
+.card:active{background:rgba(255,255,255,.8)}
+.card-d{text-align:center;min-width:40px;padding:4px 6px;border-radius:8px;background:rgba(173,216,230,.2)}
+.card-d .d{font-size:20px;font-weight:700;color:#4a7c8a;line-height:1}
+.card-d .m{font-size:10px;color:#9cb8c4}
+.card-c{flex:1;min-width:0}
+.card-c .w{font-size:11px;color:#9cb8c4;margin-bottom:2px}
+.card-c .p{font-size:13px;color:#5a7a8a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.card-r{font-size:18px}
+.empty{text-align:center;padding:50px 0;color:#9cb8c4}
+.empty div:first-child{font-size:40px;margin-bottom:10px}
+.read-head{text-align:center;padding:16px 0;border-bottom:1px solid rgba(173,216,230,.2)}
+.read-head .rd{font-size:17px;color:#4a7c8a;font-weight:600}
+.read-head .rm{display:flex;justify-content:center;gap:10px;margin-top:8px;font-size:24px}
+.read-body{padding:20px 0;font-size:15px;line-height:2.1;white-space:pre-wrap;word-break:break-word;min-height:160px}
+.read-ft{display:flex;gap:10px;justify-content:center;padding-top:16px;border-top:1px solid rgba(173,216,230,.2)}
+.read-ft button{padding:10px 20px;border-radius:16px;font-family:inherit;font-size:13px;cursor:pointer}
+.btn-e{border:1px solid rgba(173,216,230,.4);background:rgba(255,255,255,.6);color:#4a7c8a}
+.btn-d{border:1px solid rgba(220,180,180,.4);background:rgba(255,255,255,.4);color:#c4888a}
+.back{display:inline-block;padding:6px 14px;border:none;border-radius:16px;background:rgba(173,216,230,.25);color:#7ba7bc;font-size:12px;cursor:pointer;font-family:inherit;margin-bottom:12px}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+const MS=[{e:"😊",l:"开心"},{e:"🥰",l:"幸福"},{e:"😌",l:"平静"},{e:"😢",l:"难过"},{e:"😤",l:"生气"},{e:"🥺",l:"委屈"},{e:"😴",l:"困了"},{e:"🤔",l:"在想"},{e:"💪",l:"加油"},{e:"🎵",l:"练琴"}];
+const WS=["☀️","⛅","☁️","🌧️","❄️","🌙"];
+const WK=["日","一","二","三","四","五","六"];
+let entries={},view="write",curDate=tod(),readDate=null,savedShow=false;
+function tod(){return new Date().toISOString().split("T")[0]}
+function fmtD(s){const d=new Date(s);return{y:d.getFullYear(),m:d.getMonth()+1,d:d.getDate(),w:WK[d.getDay()]}}
+function ce(){return entries[curDate]||{text:"",mood:null,weather:null}}
+function save(){localStorage.setItem("yj-diary",JSON.stringify(entries));savedShow=true;render();setTimeout(()=>{savedShow=false;render()},1200)}
+function upd(k,v){entries[curDate]={...ce(),[k]:v,date:curDate};save()}
+function navDay(n){const d=new Date(curDate);d.setDate(d.getDate()+n);curDate=d.toISOString().split("T")[0];render()}
+function del(dk){delete entries[dk];save();view="list";render()}
+function render(){
+  const a=document.getElementById("app");const e=ce();const di=fmtD(curDate);const isT=curDate===tod();
+  const sorted=Object.keys(entries).filter(k=>entries[k].text||entries[k].mood).sort((a,b)=>b.localeCompare(a));
+  let h=`<div class="bar"><button class="${view==="write"?"on":""}" onclick="view='write';render()">写日记</button><button class="${view==="list"?"on":""}" onclick="view='list';render()">翻日记 (${sorted.length})</button></div>`;
+  if(savedShow)h+=`<div class="saved">已保存 ✓</div>`;
+  if(view==="write"){
+    h+=`<div class="wrap"><div class="date-nav"><button onclick="navDay(-1)">‹</button><div><div class="date-main">${di.m}月${di.d}日</div><div class="date-sub">${di.y}年 · 星期${di.w}${isT?'<span class="today-b">今天</span>':''}</div></div><button onclick="navDay(1)">›</button></div>`;
+    h+=`<div class="sec"><div class="sec-l">心情</div><div class="moods">${MS.map(m=>`<button class="mood-b${e.mood===m.e?" on":""}" onclick="upd('mood',ce().mood==='${m.e}'?null:'${m.e}')"><span>${m.e}</span><span>${m.l}</span></button>`).join("")}</div></div>`;
+    h+=`<div class="sec"><div class="sec-l">天气</div><div class="wx">${WS.map(w=>`<button class="${e.weather===w?"on":""}" onclick="upd('weather',ce().weather==='${w}'?null:'${w}')">${w}</button>`).join("")}</div></div>`;
+    h+=`<div class="sec"><div class="sec-l">写点什么</div><textarea id="ta" oninput="upd('text',this.value)" placeholder="今天发生了什么...">${e.text||""}</textarea><div class="cc">${(e.text||"").length} 字</div></div></div>`;
+  } else if(view==="list"){
+    h+=`<div class="wrap">`;
+    if(!sorted.length){h+=`<div class="empty"><div>🌸</div><div>还没有日记呢</div></div>`}
+    else{sorted.forEach(k=>{const en=entries[k];const i=fmtD(k);h+=`<div class="card" onclick="readDate='${k}';view='read';render()"><div class="card-d"><div class="d">${i.d}</div><div class="m">${i.m}月</div></div><div class="card-c"><div class="w">星期${i.w}</div><div class="p">${en.text?en.text.substring(0,40)+(en.text.length>40?"...":""):"（无文字）"}</div></div><div class="card-r">${en.mood||""}${en.weather||""}</div></div>`})}
+    h+=`</div>`;
+  } else if(view==="read"&&readDate&&entries[readDate]){
+    const en=entries[readDate];const i=fmtD(readDate);
+    h+=`<div class="wrap"><button class="back" onclick="view='list';render()">← 返回</button><div class="read-head"><div class="rd">${i.y}年${i.m}月${i.d}日 星期${i.w}</div><div class="rm">${en.mood||""}${en.weather||""}</div></div><div class="read-body">${en.text||"（心情被记住了）"}</div><div class="read-ft"><button class="btn-e" onclick="curDate='${readDate}';view='write';render()">编辑</button><button class="btn-d" onclick="if(confirm('删除？'))del('${readDate}')">删除</button></div></div>`;
+  }
+  a.innerHTML=h;
+}
+try{entries=JSON.parse(localStorage.getItem("yj-diary"))||{}}catch(e){}
+render();
+</script>
+</body>
+</html>

@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="封面生成">
+<link rel="apple-touch-icon" href="icons/cover.png">
+<title>封面生成器</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}body{font-family:-apple-system,'PingFang SC',sans-serif;background:#f5f0eb;min-height:100vh;min-height:100dvh;color:#3a3a3a;padding-top:env(safe-area-inset-top)}
+.header{text-align:center;padding:20px}.header h1{font-size:18px;color:#4a7c8a}.header p{font-size:11px;color:#9cb8c4;margin-top:4px}
+.preview-wrap{display:flex;justify-content:center;padding:0 20px}
+canvas{border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,.1);max-width:100%;touch-action:none}
+.controls{max-width:400px;margin:16px auto;padding:0 20px}
+.row{margin-bottom:12px}
+.row label{display:block;font-size:12px;color:#7ba7bc;margin-bottom:6px}
+.row input[type=text],.row textarea{width:100%;padding:10px 14px;border:1px solid rgba(173,216,230,.3);border-radius:12px;font-size:14px;font-family:inherit;background:rgba(255,255,255,.7);outline:none;color:#3a3a3a}
+.row textarea{resize:vertical;min-height:60px;line-height:1.6}
+.colors{display:flex;gap:6px;flex-wrap:wrap}
+.color-btn{width:36px;height:36px;border-radius:10px;border:2px solid transparent;cursor:pointer;transition:.2s}
+.color-btn.on{border-color:#4a7c8a;transform:scale(1.1)}
+.sizes{display:flex;gap:6px}
+.size-btn{padding:6px 14px;border:1px solid rgba(173,216,230,.3);border-radius:10px;background:rgba(255,255,255,.5);font-size:12px;color:#7ba7bc;cursor:pointer;font-family:inherit}
+.size-btn.on{background:rgba(173,216,230,.3);color:#4a7c8a;border-color:#7ba7bc}
+.save-btn{display:block;width:100%;padding:14px;border:none;border-radius:14px;background:linear-gradient(135deg,#b8d4e3,#8ab4c7);color:#fff;font-size:15px;font-family:inherit;cursor:pointer;margin-top:16px;letter-spacing:2px}
+.save-btn:active{opacity:.8}
+.fonts{display:flex;gap:6px;flex-wrap:wrap}
+.font-btn{padding:6px 12px;border:1px solid rgba(173,216,230,.3);border-radius:10px;background:rgba(255,255,255,.5);font-size:12px;color:#7ba7bc;cursor:pointer}
+.font-btn.on{background:rgba(173,216,230,.3);color:#4a7c8a}
+</style>
+</head>
+<body>
+<div class="header"><h1>🎨 封面生成器</h1><p>小红书 / 朋友圈 · 一键生成</p></div>
+<div class="preview-wrap"><canvas id="cv" width="540" height="540"></canvas></div>
+<div class="controls">
+  <div class="row"><label>标题</label><input type="text" id="title" value="朋友们的一天" oninput="draw()"></div>
+  <div class="row"><label>副标题</label><input type="text" id="sub" value="示例用户 × 示例角色甲" oninput="draw()"></div>
+  <div class="row"><label>正文（可选）</label><textarea id="body" oninput="draw()" placeholder="写点什么..."></textarea></div>
+  <div class="row"><label>配色</label><div class="colors" id="colors"></div></div>
+  <div class="row"><label>字体风格</label><div class="fonts" id="fonts"></div></div>
+  <div class="row"><label>尺寸</label><div class="sizes" id="sizes"></div></div>
+  <button class="save-btn" onclick="saveImg()">💾 保存图片</button>
+</div>
+<script>
+const THEMES=[
+  {name:"浅蓝",bg:["#b8d4e3","#e8f4f8"],text:"#2a4a5a",sub:"#5a8a9a"},
+  {name:"暖粉",bg:["#f8c9b8","#fde8e0"],text:"#5a3a3a",sub:"#9a6a5a"},
+  {name:"薄荷",bg:["#b8e3c8","#e0f5e8"],text:"#2a4a3a",sub:"#5a9a6a"},
+  {name:"薰衣草",bg:["#c8b8e3","#e8e0f5"],text:"#3a2a4a",sub:"#7a5a9a"},
+  {name:"奶茶",bg:["#e3d8c8","#f5f0e8"],text:"#4a3a2a",sub:"#9a8a6a"},
+  {name:"深蓝夜",bg:["#1a1a3e","#0f0c29"],text:"#b8d4e3",sub:"#7a9aaa"},
+  {name:"玫瑰金",bg:["#e3b8c8","#f5e0e8"],text:"#4a2a3a",sub:"#9a5a7a"},
+  {name:"森林",bg:["#2a4a3a","#1a3a2a"],text:"#b8e3c8",sub:"#8ac7a0"},
+];
+const FONTS=[
+  {name:"衬线",f:"Georgia, 'Songti SC', serif"},
+  {name:"黑体",f:"'PingFang SC', sans-serif"},
+  {name:"圆体",f:"'Wawati SC', 'Comic Sans MS', sans-serif"},
+];
+const SIZES=[{name:"1:1",w:540,h:540},{name:"3:4",w:540,h:720},{name:"4:3",w:720,h:540}];
+let theme=0,font=0,size=0;
+function renderOptions(){
+  document.getElementById("colors").innerHTML=THEMES.map((t,i)=>`<div class="color-btn${theme===i?" on":""}" style="background:linear-gradient(135deg,${t.bg[0]},${t.bg[1]})" onclick="theme=${i};renderOptions();draw()"></div>`).join("");
+  document.getElementById("fonts").innerHTML=FONTS.map((f,i)=>`<button class="font-btn${font===i?" on":""}" onclick="font=${i};renderOptions();draw()">${f.name}</button>`).join("");
+  document.getElementById("sizes").innerHTML=SIZES.map((s,i)=>`<button class="size-btn${size===i?" on":""}" onclick="size=${i};renderOptions();draw()">${s.name}</button>`).join("");
+}
+function draw(){
+  const cv=document.getElementById("cv");const sz=SIZES[size];cv.width=sz.w;cv.height=sz.h;
+  const ctx=cv.getContext("2d");const t=THEMES[theme];const ff=FONTS[font].f;
+  const grd=ctx.createLinearGradient(0,0,sz.w,sz.h);grd.addColorStop(0,t.bg[0]);grd.addColorStop(1,t.bg[1]);
+  ctx.fillStyle=grd;ctx.fillRect(0,0,sz.w,sz.h);
+  // subtle pattern
+  ctx.globalAlpha=0.03;for(let i=0;i<sz.w;i+=20)for(let j=0;j<sz.h;j+=20){ctx.fillStyle=t.text;ctx.fillRect(i,j,1,1)}
+  ctx.globalAlpha=1;
+  const title=document.getElementById("title").value;
+  const sub=document.getElementById("sub").value;
+  const body=document.getElementById("body").value;
+  const cx=sz.w/2;let cy=sz.h*0.38;
+  if(title){ctx.font=`bold ${sz.w>600?36:30}px ${ff}`;ctx.fillStyle=t.text;ctx.textAlign="center";ctx.fillText(title,cx,cy)}
+  if(sub){cy+=40;ctx.font=`${sz.w>600?18:15}px ${ff}`;ctx.fillStyle=t.sub;ctx.fillText(sub,cx,cy)}
+  if(body){cy+=36;ctx.font=`${sz.w>600?16:14}px ${ff}`;ctx.fillStyle=t.sub;const lines=body.split("\n");lines.forEach((l,i)=>{ctx.fillText(l,cx,cy+i*24)})}
+  // decorative line
+  ctx.strokeStyle=t.sub;ctx.globalAlpha=0.3;ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(cx-60,cy+20);ctx.lineTo(cx+60,cy+20);ctx.stroke();
+  ctx.globalAlpha=1;
+}
+function saveImg(){
+  const cv=document.getElementById("cv");const link=document.createElement("a");
+  link.download="cover.png";link.href=cv.toDataURL("image/png");link.click();
+}
+renderOptions();draw();
+</script>
+</body>
+</html>

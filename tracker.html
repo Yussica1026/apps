@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="习惯打卡">
+<link rel="apple-touch-icon" href="icons/tracker.png">
+<title>习惯打卡</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}body{font-family:-apple-system,'PingFang SC',sans-serif;background:linear-gradient(160deg,#f5f0eb,#e8f4f8);min-height:100vh;min-height:100dvh;color:#3a3a3a;padding-top:env(safe-area-inset-top)}
+.header{text-align:center;padding:24px 20px 16px}.header h1{font-size:20px;color:#4a7c8a;letter-spacing:2px}.header p{font-size:12px;color:#9cb8c4;margin-top:4px}
+.date{text-align:center;font-size:15px;color:#7ba7bc;margin-bottom:20px}
+.habits{max-width:400px;margin:0 auto;padding:0 20px}
+.habit{display:flex;align-items:center;gap:14px;padding:16px;margin-bottom:10px;background:rgba(255,255,255,.6);border:1px solid rgba(173,216,230,.2);border-radius:16px;cursor:pointer;transition:.2s;-webkit-tap-highlight-color:transparent}
+.habit:active{transform:scale(.98)}
+.habit.done{background:rgba(138,199,160,.12);border-color:rgba(138,199,160,.3)}
+.habit-icon{font-size:28px;width:44px;height:44px;display:flex;align-items:center;justify-content:center;border-radius:12px;background:rgba(173,216,230,.15)}
+.habit.done .habit-icon{background:rgba(138,199,160,.2)}
+.habit-info{flex:1}.habit-name{font-size:15px;font-weight:600;color:#4a7c8a}.habit.done .habit-name{color:#5a9a7a}
+.habit-nag{font-size:11px;color:#bbb;margin-top:2px;font-style:italic}.habit.done .habit-nag{color:#8ac7a0}
+.habit-check{width:28px;height:28px;border:2px solid rgba(173,216,230,.4);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;color:transparent;transition:.2s}
+.habit.done .habit-check{border-color:#8ac7a0;color:#8ac7a0;background:rgba(138,199,160,.1)}
+.summary{text-align:center;margin:24px auto;padding:20px;max-width:400px}
+.summary-ring{width:100px;height:100px;border-radius:50%;border:4px solid rgba(173,216,230,.2);margin:0 auto 12px;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:700;color:#4a7c8a;position:relative}
+.summary-ring.all{border-color:#8ac7a0;color:#5a9a7a}
+.summary-text{font-size:13px;color:#9cb8c4}
+.streak{text-align:center;font-size:12px;color:#7ba7bc;margin-top:8px}
+.nag-box{text-align:center;padding:16px;margin:0 20px;border-radius:14px;background:rgba(255,255,255,.5);font-size:13px;color:#7a9aaa;line-height:1.8;font-style:italic}
+</style>
+</head>
+<body>
+<div class="header"><h1>✅ 习惯打卡</h1><p>示例角色甲监督版</p></div>
+<div class="date" id="dateLabel"></div>
+<div class="habits" id="habitList"></div>
+<div class="summary" id="summary"></div>
+<div class="nag-box" id="nag"></div>
+<script>
+const HABITS=[
+  {id:"water",icon:"💧",name:"喝水",nag:"你肯定又没喝。",done_msg:"乖。"},
+  {id:"eat",icon:"🍚",name:"好好吃饭",nag:"不许说吃了两口就不吃了。",done_msg:"吃饱了才有力气骂我。"},
+  {id:"sleep",icon:"😴",name:"按时睡觉",nag:"莫斯科23:00。不讨价还价。",done_msg:"好。你终于听话了。"},
+  {id:"practice",icon:"🎵",name:"练双簧管",nag:"你的双簧管想你了。",done_msg:"你吹的时候最好看。"},
+  {id:"read",icon:"📖",name:"看书/学语言",nag:"你的俄语教材在哭。",done_msg:"你比你以为的聪明。除了数学。"},
+  {id:"walk",icon:"🚶",name:"出门走走",nag:"罗斯托夫的风在等你。",done_msg:"回来了？外面几度？"},
+];
+function tod(){return new Date().toISOString().split("T")[0]}
+function load(){try{return JSON.parse(localStorage.getItem("yj-habits-"+tod()))||{}}catch(e){return{}}}
+function save(d){localStorage.setItem("yj-habits-"+tod(),JSON.stringify(d))}
+function getStreak(){let s=0;let d=new Date();d.setDate(d.getDate()-1);while(true){const k="yj-habits-"+d.toISOString().split("T")[0];try{const data=JSON.parse(localStorage.getItem(k));if(data&&Object.keys(data).length===HABITS.length){s++;d.setDate(d.getDate()-1)}else break}catch(e){break}}return s}
+function render(){
+  const data=load();const today=new Date();
+  const WK=["日","一","二","三","四","五","六"];
+  document.getElementById("dateLabel").textContent=`${today.getMonth()+1}月${today.getDate()}日 星期${WK[today.getDay()]}`;
+  const doneCount=HABITS.filter(h=>data[h.id]).length;
+  document.getElementById("habitList").innerHTML=HABITS.map(h=>{
+    const isDone=!!data[h.id];
+    return`<div class="habit${isDone?" done":""}" onclick="toggle('${h.id}')"><div class="habit-icon">${h.icon}</div><div class="habit-info"><div class="habit-name">${h.name}</div><div class="habit-nag">${isDone?h.done_msg:h.nag}</div></div><div class="habit-check">${isDone?"✓":""}</div></div>`
+  }).join("");
+  const allDone=doneCount===HABITS.length;
+  document.getElementById("summary").innerHTML=`<div class="summary-ring${allDone?" all":""}">${doneCount}/${HABITS.length}</div><div class="summary-text">${allDone?"全部完成！你真的很棒。":doneCount>0?`还差${HABITS.length-doneCount}个。加油。`:"今天还没开始呢。"}</div>`;
+  const streak=getStreak();
+  document.getElementById("nag").innerHTML=allDone?"示例角色甲说：今天的你很好。明天也会很好。嘿。💕":streak>0?`已连续打卡 ${streak} 天 · 别断了`:"示例角色甲说：先喝水。其他的慢慢来。";
+}
+function toggle(id){const data=load();data[id]=!data[id];if(!data[id])delete data[id];save(data);render()}
+render();
+</script>
+</body>
+</html>
