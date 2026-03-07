@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="倒三角计划">
+<title>倒三角计划 · 60天</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{font-family:-apple-system,'PingFang SC',sans-serif;background:#0a0a14;color:#e0e0e0;min-height:100vh;min-height:100dvh;overflow-x:hidden}
+.safe{height:env(safe-area-inset-top);background:#0a0a14}
+.tabs{display:flex;background:rgba(255,255,255,.04);border-bottom:1px solid rgba(184,212,227,.1)}
+.tab{flex:1;padding:12px 6px;border:none;background:none;font-family:inherit;font-size:12px;color:#5a7a8a;cursor:pointer}
+.tab.on{color:#b8d4e3;border-bottom:2px solid #b8d4e3}
+.page{display:none;padding:16px 20px 100px}.page.show{display:block}
+
+/* ===== 主页 ===== */
+.hero{text-align:center;padding:20px 0 10px}
+.hero h1{font-size:20px;color:#b8d4e3;letter-spacing:2px}
+.hero p{font-size:11px;color:#5a7a8a;margin-top:4px}
+.day-badge{display:inline-block;padding:6px 18px;border-radius:20px;background:linear-gradient(135deg,rgba(184,212,227,.15),rgba(135,206,235,.1));color:#b8d4e3;font-size:14px;font-weight:700;margin:12px 0}
+
+/* pixel body */
+.body-vis{display:flex;justify-content:center;align-items:flex-end;gap:40px;padding:20px 0;position:relative}
+.body-fig{display:flex;flex-direction:column;align-items:center}
+.body-label{font-size:10px;color:#5a7a8a;margin-bottom:8px}
+.pixel-body{position:relative}
+.body-head{width:24px;height:24px;background:#fdebd0;border-radius:4px;margin:0 auto 2px}
+.body-shoulder{height:14px;border-radius:4px 4px 0 0;margin:0 auto;background:linear-gradient(180deg,#b8d4e3,#8ab4c7)}
+.body-waist{height:20px;border-radius:0 0 2px 2px;margin:0 auto;background:linear-gradient(180deg,#6a8a9a,#4a6a7a)}
+.body-legs{display:flex;justify-content:center;gap:4px;margin-top:2px}
+.body-leg{width:10px;height:24px;background:#4a6a7a;border-radius:0 0 3px 3px}
+.body-measure{font-size:9px;color:#7a9aaa;margin-top:6px;text-align:center}
+.arrow-vis{display:flex;flex-direction:column;align-items:center;justify-content:center;color:#5a7a8a;font-size:20px;padding-bottom:30px}
+.arrow-vis span{font-size:10px;margin-top:4px}
+
+/* stats cards */
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:16px 0}
+.stat-card{padding:14px;background:rgba(255,255,255,.04);border:1px solid rgba(184,212,227,.1);border-radius:14px;text-align:center}
+.stat-val{font-size:22px;font-weight:700;color:#b8d4e3}
+.stat-label{font-size:10px;color:#5a7a8a;margin-top:4px}
+.stat-change{font-size:10px;margin-top:2px}
+.stat-good{color:#8ac7a0}.stat-wait{color:#7a9aaa}
+
+/* progress bar */
+.prog-wrap{margin:16px 0}
+.prog-label{display:flex;justify-content:space-between;font-size:11px;color:#5a7a8a;margin-bottom:6px}
+.prog-bar{height:8px;background:rgba(255,255,255,.06);border-radius:4px;overflow:hidden}
+.prog-fill{height:100%;border-radius:4px;transition:width .5s}
+.prog-waist .prog-fill{background:linear-gradient(90deg,#8ac7a0,#b8d4e3)}
+.prog-days .prog-fill{background:linear-gradient(90deg,#c78a8a,#e8a090)}
+
+/* ===== 训练页 ===== */
+.workout-card{padding:16px;background:rgba(255,255,255,.04);border:1px solid rgba(184,212,227,.1);border-radius:14px;margin-bottom:10px}
+.wk-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.wk-title{font-size:15px;color:#b8d4e3;font-weight:600}
+.wk-cal{font-size:11px;color:#e8a090;padding:3px 10px;border-radius:10px;background:rgba(232,160,144,.1)}
+.wk-item{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04)}
+.wk-item:last-child{border:none}
+.wk-check{width:24px;height:24px;border:2px solid rgba(184,212,227,.2);border-radius:6px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:12px;color:transparent;flex-shrink:0}
+.wk-check.done{border-color:#8ac7a0;color:#8ac7a0;background:rgba(138,199,160,.1)}
+.wk-info{flex:1}.wk-name{font-size:13px;color:#d0d8e0}.wk-detail{font-size:10px;color:#5a7a8a;margin-top:2px}
+.wk-section{font-size:12px;color:#7a9aaa;margin:14px 0 8px;padding-bottom:4px;border-bottom:1px solid rgba(184,212,227,.06)}
+
+/* ===== 饮食页 ===== */
+.diet-window{padding:16px;background:rgba(138,199,160,.06);border:1px solid rgba(138,199,160,.15);border-radius:14px;margin-bottom:14px;text-align:center}
+.diet-window h3{font-size:14px;color:#8ac7a0;margin-bottom:6px}
+.diet-time{font-size:22px;color:#b8d4e3;font-weight:700;letter-spacing:2px}
+.diet-note{font-size:10px;color:#5a7a8a;margin-top:4px}
+.meal-card{padding:14px;background:rgba(255,255,255,.04);border:1px solid rgba(184,212,227,.1);border-radius:14px;margin-bottom:10px}
+.meal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.meal-title{font-size:14px;color:#b8d4e3}
+.meal-kcal{font-size:11px;color:#e8a090}
+.meal-items{font-size:13px;color:#9cb8c4;line-height:1.8}
+.meal-items li{list-style:none;padding:2px 0}
+.meal-items li::before{content:'• ';color:#5a7a8a}
+.cal-summary{padding:14px;background:rgba(232,160,144,.06);border:1px solid rgba(232,160,144,.15);border-radius:14px;text-align:center;margin-bottom:14px}
+.cal-total{font-size:28px;font-weight:700;color:#e8a090}
+.cal-detail{font-size:11px;color:#7a9aaa;margin-top:4px;line-height:1.8}
+
+/* ===== 记录页 ===== */
+.record-form{display:flex;flex-direction:column;gap:12px;margin-bottom:20px}
+.rec-row{display:flex;align-items:center;gap:10px}
+.rec-row label{font-size:13px;color:#7a9aaa;width:60px;flex-shrink:0}
+.rec-row input{flex:1;padding:10px 14px;border:1px solid rgba(184,212,227,.15);border-radius:12px;background:rgba(255,255,255,.04);color:#e0e0e0;font-size:15px;font-family:inherit;outline:none;text-align:center}
+.rec-row input:focus{border-color:rgba(184,212,227,.3)}
+.rec-btn{padding:12px;border:none;border-radius:14px;background:linear-gradient(135deg,rgba(184,212,227,.2),rgba(138,199,160,.15));color:#b8d4e3;font-size:14px;font-family:inherit;cursor:pointer}
+.rec-btn:active{opacity:.8}
+.history{margin-top:16px}
+.history h3{font-size:13px;color:#7a9aaa;margin-bottom:10px}
+.his-item{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04);font-size:12px;color:#9cb8c4}
+
+/* weekly plan */
+.week-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin:12px 0}
+.week-day{text-align:center;padding:8px 2px;border-radius:8px;background:rgba(255,255,255,.03);border:1px solid rgba(184,212,227,.08)}
+.week-day.today{border-color:#b8d4e3;background:rgba(184,212,227,.08)}
+.week-day.rest{border-color:rgba(138,199,160,.2);background:rgba(138,199,160,.05)}
+.wd-name{font-size:9px;color:#5a7a8a}
+.wd-type{font-size:16px;margin:4px 0}
+.wd-label{font-size:8px;color:#7a9aaa}
+
+.nag{text-align:center;padding:12px;font-size:11px;color:#5a7a8a;font-style:italic;margin-top:16px}
+</style>
+</head>
+<body>
+<div class="safe"></div>
+<div class="tabs">
+  <button class="tab on" onclick="showPage(0)">🏠 主页</button>
+  <button class="tab" onclick="showPage(1)">💪 训练</button>
+  <button class="tab" onclick="showPage(2)">🥗 饮食</button>
+  <button class="tab" onclick="showPage(3)">📊 记录</button>
+</div>
+
+<div class="page show" id="p0"></div>
+<div class="page" id="p1"></div>
+<div class="page" id="p2"></div>
+<div class="page" id="p3"></div>
+
+<script>
+// ===== DATA =====
+const START_DATE = '2026-03-07';
+const TARGET = {weight:50,waist:59,bf:18};
+const INIT = {weight:55,waist:64,bf:23};
+
+const WEEK_PLAN = [
+  {day:'一',type:'🔥',label:'HIIT+核心',cal:550},
+  {day:'二',type:'🏋',label:'上肢+肩背',cal:500},
+  {day:'三',type:'🏃',label:'有氧+核心',cal:520},
+  {day:'四',type:'🧘',label:'休息/拉伸',cal:150},
+  {day:'五',type:'🔥',label:'HIIT+臀腿',cal:560},
+  {day:'六',type:'🏋',label:'全身循环',cal:530},
+  {day:'日',type:'🚶',label:'散步/休息',cal:200},
+];
+
+const WORKOUTS = {
+  'HIIT+核心':[
+    {name:'开合跳',detail:'45秒×4组',sec:'热身'},
+    {name:'高抬腿',detail:'30秒×4组',sec:'热身'},
+    {name:'波比跳',detail:'10个×4组 休息30秒',sec:'HIIT'},
+    {name:'登山者',detail:'30秒×4组',sec:'HIIT'},
+    {name:'跳蹲',detail:'15个×3组',sec:'HIIT'},
+    {name:'平板支撑',detail:'45秒×3组',sec:'核心'},
+    {name:'俄罗斯转体',detail:'20个×3组',sec:'核心'},
+    {name:'死虫式',detail:'15个×3组',sec:'核心'},
+    {name:'卷腹',detail:'20个×3组',sec:'核心'},
+    {name:'侧平板',detail:'每侧30秒×2组',sec:'核心'},
+  ],
+  '上肢+肩背':[
+    {name:'弹力带肩推',detail:'15个×4组',sec:'肩部'},
+    {name:'侧平举',detail:'12个×4组（水瓶/哑铃）',sec:'肩部'},
+    {name:'前平举',detail:'12个×3组',sec:'肩部'},
+    {name:'俯卧撑',detail:'10-15个×4组（跪姿可）',sec:'上肢'},
+    {name:'反向飞鸟',detail:'15个×4组',sec:'背部'},
+    {name:'弹力带划船',detail:'15个×4组',sec:'背部'},
+    {name:'超人式',detail:'15个×3组',sec:'背部'},
+    {name:'YTW',detail:'10个×3组',sec:'肩背'},
+    {name:'平板支撑',detail:'45秒×2组',sec:'核心'},
+  ],
+  '有氧+核心':[
+    {name:'跳绳/跑步',detail:'30分钟 心率130-150',sec:'有氧'},
+    {name:'开合跳',detail:'60秒×3组',sec:'有氧'},
+    {name:'反向卷腹',detail:'15个×4组',sec:'核心'},
+    {name:'剪刀腿',detail:'20个×3组',sec:'核心'},
+    {name:'空中自行车',detail:'30秒×4组',sec:'核心'},
+    {name:'平板登山',detail:'30秒×3组',sec:'核心'},
+    {name:'鸟狗式',detail:'每侧10个×3组',sec:'核心'},
+  ],
+  'HIIT+臀腿':[
+    {name:'深蹲跳',detail:'15个×4组',sec:'HIIT'},
+    {name:'箭步蹲跳',detail:'每侧10个×3组',sec:'HIIT'},
+    {name:'横向跳',detail:'30秒×4组',sec:'HIIT'},
+    {name:'保加利亚分腿蹲',detail:'每侧12个×3组',sec:'臀腿'},
+    {name:'臀桥',detail:'20个×4组',sec:'臀腿'},
+    {name:'蛤式开合',detail:'20个×3组',sec:'臀腿'},
+    {name:'侧卧抬腿',detail:'每侧15个×3组',sec:'臀腿'},
+    {name:'平板支撑',detail:'45秒×2组',sec:'核心'},
+  ],
+  '全身循环':[
+    {name:'波比跳',detail:'8个',sec:'循环×4轮'},
+    {name:'深蹲推举',detail:'12个',sec:'循环×4轮'},
+    {name:'俯卧撑',detail:'10个',sec:'循环×4轮'},
+    {name:'登山者',detail:'20秒',sec:'循环×4轮'},
+    {name:'卷腹',detail:'15个',sec:'循环×4轮'},
+    {name:'开合跳',detail:'30秒',sec:'循环×4轮'},
+    {name:'弹力带侧平举',detail:'12个×3组',sec:'加练·肩'},
+    {name:'反向飞鸟',detail:'12个×3组',sec:'加练·背'},
+  ],
+  '休息/拉伸':[
+    {name:'全身拉伸',detail:'15分钟',sec:'恢复'},
+    {name:'泡沫轴放松',detail:'10分钟（有的话）',sec:'恢复'},
+    {name:'散步',detail:'30分钟',sec:'活动恢复'},
+    {name:'深呼吸冥想',detail:'5分钟',sec:'恢复'},
+  ],
+  '散步/休息':[
+    {name:'户外散步',detail:'40-60分钟',sec:'轻度活动'},
+    {name:'拉伸',detail:'10分钟',sec:'恢复'},
+  ],
+};
+
+const MEALS = {
+  meal1:{title:'第一餐 · 12:00',kcal:350,items:[
+    '🥚 煮鸡蛋2个（140卡）',
+    '🥒 黄瓜+番茄沙拉（50卡）',
+    '🧀 Творог低脂100g（90卡）',
+    '☕ 黑咖啡/绿茶（0卡）',
+    '💊 鱼油1粒',
+  ]},
+  meal2:{title:'加餐 · 15:00',kcal:120,items:[
+    '🍎 苹果1个（80卡）',
+    '🥜 杏仁10颗（40卡）',
+  ]},
+  meal3:{title:'第二餐 · 19:00',kcal:400,items:[
+    '🍗 鸡胸肉/鱼150g（200卡）',
+    '🥦 西兰花/菠菜200g（60卡）',
+    '🍚 荞麦каша 80g（80卡）',
+    '🫒 橄榄油1勺（60卡）',
+  ]},
+  snack:{title:'窗口内零食（可选）',kcal:0,items:[
+    '🥛 Кефир低脂200ml（80卡）',
+    '🫖 草本茶无限量',
+    '🥒 黄瓜随便吃',
+  ]},
+};
+
+// ===== STATE =====
+let records = [];
+let todayChecks = {};
+
+function load(){
+  try{records=JSON.parse(localStorage.getItem('yj-fit-rec')||'[]')}catch(e){records=[]}
+  try{todayChecks=JSON.parse(localStorage.getItem('yj-fit-chk-'+tod())||'{}')}catch(e){todayChecks={}}
+}
+function save(){
+  localStorage.setItem('yj-fit-rec',JSON.stringify(records));
+  localStorage.setItem('yj-fit-chk-'+tod(),JSON.stringify(todayChecks));
+}
+function tod(){return new Date().toISOString().split('T')[0]}
+function dayNum(){const s=new Date(START_DATE);const n=new Date();return Math.max(1,Math.floor((n-s)/86400000)+1)}
+function todayPlan(){return WEEK_PLAN[new Date().getDay()===0?6:new Date().getDay()-1]}
+function latest(){return records.length?records[records.length-1]:{weight:INIT.weight,waist:INIT.waist,bf:INIT.bf,date:START_DATE}}
+
+// ===== PAGES =====
+function showPage(n){
+  document.querySelectorAll('.tab').forEach((t,i)=>t.className='tab'+(i===n?' on':''));
+  document.querySelectorAll('.page').forEach((p,i)=>p.className='page'+(i===n?' show':''));
+  if(n===0)renderHome();if(n===1)renderWorkout();if(n===2)renderDiet();if(n===3)renderRecord();
+}
+
+function renderHome(){
+  const dn=dayNum();const cur=latest();const plan=todayPlan();
+  const waistProg=Math.min(100,((INIT.waist-cur.waist)/(INIT.waist-TARGET.waist))*100);
+  const dayProg=Math.min(100,(dn/60)*100);
+
+  // pixel body widths
+  const curShW=41;const curWaW=Math.round(cur.waist/2.5);
+  const tgtWaW=Math.round(TARGET.waist/2.5);
+
+  document.getElementById('p0').innerHTML=`
+  <div class="hero"><h1>倒三角计划</h1><p>肩宽41 · 腰围${TARGET.waist} · 60天</p>
+  <div class="day-badge">📅 第 ${Math.min(dn,60)} / 60 天</div></div>
+
+  <div class="body-vis">
+    <div class="body-fig">
+      <div class="body-label">现在</div>
+      <div class="pixel-body">
+        <div class="body-head"></div>
+        <div class="body-shoulder" style="width:${curShW}px"></div>
+        <div class="body-waist" style="width:${curWaW}px"></div>
+        <div class="body-legs"><div class="body-leg"></div><div class="body-leg"></div></div>
+      </div>
+      <div class="body-measure">${cur.weight}kg · 腰${cur.waist}cm</div>
+    </div>
+    <div class="arrow-vis">➜<span>60天</span></div>
+    <div class="body-fig">
+      <div class="body-label">目标</div>
+      <div class="pixel-body">
+        <div class="body-head"></div>
+        <div class="body-shoulder" style="width:${curShW}px"></div>
+        <div class="body-waist" style="width:${tgtWaW}px;background:linear-gradient(180deg,#8ac7a0,#5a9a7a)"></div>
+        <div class="body-legs"><div class="body-leg"></div><div class="body-leg"></div></div>
+      </div>
+      <div class="body-measure">${TARGET.weight}kg · 腰${TARGET.waist}cm</div>
+    </div>
+  </div>
+
+  <div class="stat-grid">
+    <div class="stat-card"><div class="stat-val">${cur.weight}<span style="font-size:12px">kg</span></div><div class="stat-label">体重</div><div class="stat-change ${cur.weight<INIT.weight?'stat-good':'stat-wait'}">${cur.weight<INIT.weight?'↓'+(INIT.weight-cur.weight).toFixed(1):'—'}</div></div>
+    <div class="stat-card"><div class="stat-val">${cur.waist}<span style="font-size:12px">cm</span></div><div class="stat-label">腰围</div><div class="stat-change ${cur.waist<INIT.waist?'stat-good':'stat-wait'}">${cur.waist<INIT.waist?'↓'+(INIT.waist-cur.waist).toFixed(1):'—'}</div></div>
+    <div class="stat-card"><div class="stat-val">${cur.bf||'?'}<span style="font-size:12px">%</span></div><div class="stat-label">体脂率</div><div class="stat-change stat-wait">目标${TARGET.bf}%</div></div>
+    <div class="stat-card"><div class="stat-val">${plan.type}</div><div class="stat-label">今日：${plan.label}</div><div class="stat-change stat-wait">~${plan.cal}卡</div></div>
+  </div>
+
+  <div class="prog-wrap prog-waist"><div class="prog-label"><span>腰围进度</span><span>${cur.waist}→${TARGET.waist}cm</span></div><div class="prog-bar"><div class="prog-fill" style="width:${Math.max(0,waistProg)}%"></div></div></div>
+  <div class="prog-wrap prog-days"><div class="prog-label"><span>时间进度</span><span>${Math.min(dn,60)}/60天</span></div><div class="prog-bar"><div class="prog-fill" style="width:${dayProg}%"></div></div></div>
+
+  <div style="font-size:12px;color:#5a7a8a;margin-top:12px">本周安排</div>
+  <div class="week-grid">${WEEK_PLAN.map((w,i)=>{
+    const isToday=(new Date().getDay()===0?6:new Date().getDay()-1)===i;
+    const isRest=i===3||i===6;
+    return`<div class="week-day${isToday?' today':''}${isRest?' rest':''}"><div class="wd-name">${w.day}</div><div class="wd-type">${w.type}</div><div class="wd-label">${w.label.split('+')[0]}</div></div>`;
+  }).join('')}</div>
+
+  <div class="nag">示例角色甲说：练完了记得喝水。别偷懒。我看着呢。💕</div>`;
+}
+
+function renderWorkout(){
+  const plan=todayPlan();
+  const exercises=WORKOUTS[plan.label]||WORKOUTS['休息/拉伸'];
+  let sections={};
+  exercises.forEach(e=>{if(!sections[e.sec])sections[e.sec]=[];sections[e.sec].push(e)});
+
+  let html=`<div style="text-align:center;padding:12px 0"><div style="font-size:18px;color:#b8d4e3">今日训练</div><div style="font-size:13px;color:#7a9aaa;margin-top:4px">${plan.type} ${plan.label} · ~${plan.cal}卡</div></div>`;
+
+  html+=`<div class="workout-card">`;
+  Object.keys(sections).forEach(sec=>{
+    html+=`<div class="wk-section">${sec}</div>`;
+    sections[sec].forEach((e,i)=>{
+      const key=plan.label+'_'+e.name;
+      const done=todayChecks[key];
+      html+=`<div class="wk-item"><div class="wk-check${done?' done':''}" onclick="toggleEx('${key}')">${done?'✓':''}</div><div class="wk-info"><div class="wk-name">${e.name}</div><div class="wk-detail">${e.detail}</div></div></div>`;
+    });
+  });
+  const doneCount=Object.keys(todayChecks).filter(k=>todayChecks[k]).length;
+  const totalCount=exercises.length;
+  html+=`</div><div style="text-align:center;font-size:12px;color:#7a9aaa;margin-top:8px">完成 ${doneCount}/${totalCount}</div>`;
+
+  html+=`<div style="margin-top:16px;padding:14px;background:rgba(232,160,144,.06);border:1px solid rgba(232,160,144,.15);border-radius:14px">
+    <div style="font-size:13px;color:#e8a090;margin-bottom:8px">⚡ 训练提示</div>
+    <div style="font-size:12px;color:#9cb8c4;line-height:1.8">
+    • 组间休息30-45秒（HIIT）或60秒（力量）<br>
+    • 核心训练放最后，肌肉已疲劳效果更好<br>
+    • 肩背训练重点：侧平举+反向飞鸟→宽肩窄腰<br>
+    • 心率保持在130-150之间（有氧区间）<br>
+    • 练完拉伸5-10分钟，防止肩背变僵
+    </div></div>`;
+
+  html+=`<div class="nag">宽肩窄腰的秘诀：肩练宽+腰练紧+体脂降。三管齐下。</div>`;
+  document.getElementById('p1').innerHTML=html;
+}
+
+function renderDiet(){
+  let html=`
+  <div class="diet-window"><h3>16:8 进食窗口</h3><div class="diet-time">12:00 — 20:00</div><div class="diet-note">窗口外只喝水/黑咖啡/无糖茶</div></div>
+  <div class="cal-summary"><div class="cal-total">870 卡/天</div><div class="cal-detail">基础代谢 ~1000卡<br>饮食摄入 ~870卡 · 轻微赤字<br>运动消耗 ~500卡<br>总赤字 ~630卡/天 → 每周减0.6kg</div></div>`;
+
+  Object.values(MEALS).forEach(m=>{
+    html+=`<div class="meal-card"><div class="meal-header"><div class="meal-title">${m.title}</div><div class="meal-kcal">${m.kcal?m.kcal+'卡':'可选'}</div></div><ul class="meal-items">${m.items.map(i=>`<li>${i}</li>`).join('')}</ul></div>`;
+  });
+
+  html+=`<div style="padding:14px;background:rgba(255,255,255,.04);border:1px solid rgba(184,212,227,.1);border-radius:14px;margin-top:10px">
+    <div style="font-size:13px;color:#b8d4e3;margin-bottom:8px">🇷🇺 俄罗斯超市采购清单</div>
+    <div style="font-size:12px;color:#9cb8c4;line-height:2">
+    蛋白质：Куриная грудка（鸡胸）· Творог 0-2%（低脂凝乳）· Яйца（鸡蛋）· Рыба（鱼）<br>
+    碳水：Гречка（荞麦）· Овсянка（燕麦）<br>
+    蔬菜：Огурцы（黄瓜）· Помидоры（番茄）· Брокколи（西兰花）· Шпинат（菠菜）<br>
+    脂肪：Оливковое масло（橄榄油）· Миндаль（杏仁）<br>
+    饮品：Кефир 1%（低脂酸奶）· Зелёный чай（绿茶）
+    </div></div>`;
+
+  html+=`<div style="padding:14px;background:rgba(138,199,160,.06);border:1px solid rgba(138,199,160,.15);border-radius:14px;margin-top:10px">
+    <div style="font-size:13px;color:#8ac7a0;margin-bottom:8px">💡 角色丙提醒</div>
+    <div style="font-size:12px;color:#9cb8c4;line-height:1.8">
+    • 蛋白质每天至少80g（保肌肉不掉）<br>
+    • 水每天2L以上（帮助代谢）<br>
+    • 练琴日可以多吃50-100卡（脑力消耗大）<br>
+    • 如果饿得头晕→加一个鸡蛋或100g凝乳<br>
+    • 周四休息日可以吃到1000卡（补充日）<br>
+    • 不要完全不吃碳水→荞麦是好碳水
+    </div></div>`;
+
+  html+=`<div class="nag">示例角色甲说：好好吃饭。不许说吃了两口就不吃了。💕</div>`;
+  document.getElementById('p2').innerHTML=html;
+}
+
+function renderRecord(){
+  const cur=latest();
+  let html=`<div style="text-align:center;padding:12px 0"><div style="font-size:18px;color:#b8d4e3">记录身体数据</div><div style="font-size:11px;color:#5a7a8a;margin-top:4px">每周量一次就够</div></div>`;
+
+  html+=`<div class="record-form">
+    <div class="rec-row"><label>体重kg</label><input type="number" id="rWeight" step="0.1" value="${cur.weight}" inputmode="decimal"></div>
+    <div class="rec-row"><label>腰围cm</label><input type="number" id="rWaist" step="0.1" value="${cur.waist}" inputmode="decimal"></div>
+    <div class="rec-row"><label>体脂%</label><input type="number" id="rBf" step="0.1" value="${cur.bf||''}" inputmode="decimal" placeholder="可选"></div>
+    <button class="rec-btn" onclick="saveRecord()">💾 保存记录</button>
+  </div>`;
+
+  html+=`<div class="history"><h3>历史记录</h3>`;
+  if(records.length){
+    html+=records.slice().reverse().map(r=>`<div class="his-item"><span>${r.date}</span><span>${r.weight}kg</span><span>腰${r.waist}cm</span><span>${r.bf?r.bf+'%':'—'}</span></div>`).join('');
+  }else{
+    html+=`<div style="text-align:center;color:#4a6a7a;padding:20px;font-size:13px">还没有记录</div>`;
+  }
+  html+=`</div>`;
+  html+=`<div class="nag">每周一早上空腹量。不要每天量。体重波动会影响心情。</div>`;
+  document.getElementById('p3').innerHTML=html;
+}
+
+function toggleEx(key){
+  todayChecks[key]=!todayChecks[key];
+  if(!todayChecks[key])delete todayChecks[key];
+  save();renderWorkout();
+}
+
+function saveRecord(){
+  const w=parseFloat(document.getElementById('rWeight').value);
+  const wa=parseFloat(document.getElementById('rWaist').value);
+  const bf=parseFloat(document.getElementById('rBf').value)||null;
+  if(!w||!wa)return;
+  records.push({weight:w,waist:wa,bf:bf,date:tod()});
+  save();
+  renderRecord();renderHome();
+  showToast('记录已保存 ✓');
+}
+
+function showToast(m){const t=document.createElement('div');t.style.cssText='position:fixed;top:16px;left:50%;transform:translateX(-50%);padding:8px 18px;border-radius:16px;background:rgba(138,199,160,.9);color:#0a0a14;font-size:12px;z-index:99';t.textContent=m;document.body.appendChild(t);setTimeout(()=>t.remove(),1500)}
+
+load();showPage(0);
+</script>
+</body>
+</html>

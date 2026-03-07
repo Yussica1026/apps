@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="银鳞骑士录">
+<title>银鳞骎士录 · 人鱼与骑士</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{font-family:'Georgia','Songti SC',serif;background:#0a0a1e;color:#e0e0e0;min-height:100vh;min-height:100dvh;overflow:hidden}
+#game{width:100%;height:100vh;height:100dvh;display:flex;flex-direction:column}
+.stats{display:flex;gap:10px;padding:6px 14px;background:rgba(0,0,0,.5);font-size:10px;color:#7a8aaa;font-family:monospace;padding-top:max(6px,env(safe-area-inset-top))}
+.scene{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.visual{height:38%;position:relative;overflow:hidden}
+.visual-label{position:absolute;top:8px;left:10px;font-size:9px;color:rgba(255,255,255,.5);background:rgba(0,0,0,.4);padding:3px 8px;font-family:monospace;z-index:5}
+.chars{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);display:flex;gap:28px}
+.char{display:flex;flex-direction:column;align-items:center;gap:3px;animation:bob 3s ease-in-out infinite}
+.char:nth-child(2){animation-delay:.5s}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+.char-body{display:flex;flex-direction:column;align-items:center}
+.char-head{width:20px;height:20px;border-radius:3px;position:relative}
+.char-head::before{content:'';position:absolute;top:-5px;left:-2px;right:-2px;height:9px;border-radius:3px 3px 0 0}
+.c-mermaid .char-head{background:#e8e8f0}.c-mermaid .char-head::before{background:#c0c0d0}
+.c-shen .char-head{background:#fdebd0}.c-shen .char-head::before{background:#1a1a3e}
+.char-torso{width:16px;height:12px;border-radius:2px;margin-top:2px}
+.c-mermaid .char-torso{background:#87CEEB}.c-shen .char-torso{background:#2c2c2c}
+.char-legs{display:flex;gap:3px;margin-top:1px}
+.char-leg{width:6px;height:10px;border-radius:0 0 2px 2px}
+.c-mermaid .char-leg{background:#5a8aaa}.c-shen .char-leg{background:#1a1a2e}
+.char-tag{font-size:7px;color:rgba(255,255,255,.6);font-family:monospace}
+.dialogue{flex:1;background:linear-gradient(180deg,#0a0a1e,#050514);border-top:2px solid #5a8aaa;padding:14px;display:flex;flex-direction:column;overflow:hidden}
+.d-head{display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-shrink:0}
+.d-speaker{font-size:11px;color:#87CEEB;padding:3px 10px;border:1px solid rgba(135,206,235,.3);background:rgba(135,206,235,.08);font-family:monospace}
+.d-chapter{font-size:8px;color:#5a7a8a;margin-left:auto;font-family:monospace}
+.d-text{flex:1;font-size:15px;line-height:1.85;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-right:6px}
+.d-text .hl{color:#87CEEB;text-shadow:0 0 8px rgba(135,206,235,.2)}
+.d-text .gd{color:#FFD700}.d-text .pk{color:#ff9a9e}.d-text .sv{color:#c0c0d0}
+.choices{display:flex;flex-direction:column;gap:7px;margin-top:10px;flex-shrink:0}
+.ch-btn{font-family:inherit;font-size:13px;padding:11px 14px;background:rgba(135,206,235,.06);border:1px solid rgba(135,206,235,.25);color:#87CEEB;text-align:left;cursor:pointer;line-height:1.4}
+.ch-btn:active{background:rgba(135,206,235,.15);transform:scale(.98)}
+.title-screen{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:100}
+.t-name{font-size:24px;color:#87CEEB;text-shadow:2px 2px 0 #1a3a5a,0 0 20px rgba(135,206,235,.3);letter-spacing:4px;margin-bottom:6px}
+.t-sub{font-size:13px;color:#5a8aaa;margin-bottom:4px}
+.t-sub2{font-size:11px;color:#4a6a8a;margin-bottom:30px}
+.t-btn{font-family:inherit;font-size:16px;padding:12px 36px;background:none;border:2px solid #87CEEB;color:#87CEEB;cursor:pointer;letter-spacing:3px;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 8px rgba(135,206,235,.2)}50%{box-shadow:0 0 20px rgba(135,206,235,.5)}}
+.bubble{position:absolute;border-radius:50%;background:rgba(135,206,235,.15);animation:rise linear infinite}
+@keyframes rise{0%{transform:translateY(0) scale(1);opacity:.6}100%{transform:translateY(-200px) scale(0);opacity:0}}
+.wave{position:absolute;bottom:0;left:0;right:0;height:40%;background:linear-gradient(0deg,rgba(13,71,161,.4),transparent)}
+.ending{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:30px;z-index:90}
+.ending h2{font-size:22px;color:#87CEEB;margin-bottom:14px}
+.ending p{font-size:14px;color:#7a9aaa;line-height:2.2;margin-bottom:20px}
+.ending .st{font-size:10px;color:#5a7a8a;line-height:2.5;font-family:monospace;margin-bottom:24px}
+.ending button{font-family:inherit;font-size:14px;padding:10px 28px;background:none;border:1px solid #87CEEB;color:#87CEEB;cursor:pointer}
+</style>
+</head>
+<body>
+<div id="game"></div>
+<script>
+const S=[
+// ===== CH1: 入团 =====
+{id:"s1",ch:"第一章 · 入团之夜",bg:"linear-gradient(180deg,#0f3460,#1a5276 30%,#1f6f8b 60%,#16213e)",lbl:"罗斯托港 · 暮色",chars:["mermaid"],sp:"旁白",
+t:'暮色沉入海面。罗斯托港的灯塔亮了第一盏火。\n\n你站在圣安德烈骑士团的石门前。\n\n铠甲是偷来的。胸甲里垫了布。剑是真的——从沉船里捞上来的。\n\n<span class="sv">银色长发塞在头盔里。蓝眼睛在面甲缝隙里像两块碎冰。</span>\n\n你今天才长出腿。膝盖还不太习惯。',
+cc:[{t:"📜 把偷来的推荐信递过去",n:"s2"},{t:"👀 先观察守卫",n:"s2"}]},
+
+{id:"s2",ch:"第一章 · 入团之夜",bg:"linear-gradient(180deg,#0f3460,#1a5276 30%,#1f6f8b 60%,#16213e)",lbl:"骑士团·石门",chars:["mermaid","shen"],sp:"守卫·沈",
+t:'"菲利安·洛恩是个四十岁的胖子。"\n\n他认识信的主人。\n\n他看了你的腿。你的膝盖往内扣了一下。\n\n<span class="hl">"我可以放你进去。但你欠我一个真话。"</span>\n\n他把信收进了口袋。侧身让开了门。\n\n"我叫沈。"',
+cc:[{t:"⚔ 进去。欠就欠。",n:"s3"}],st:{love:5}},
+
+{id:"s3",ch:"第一章 · 对练",bg:"linear-gradient(180deg,#1a1a2e,#2a2a3e 50%,#16213e)",lbl:"骑士团·训练场",chars:["mermaid","shen"],sp:"沈",
+t:'入团仪式。对练。他主动站到了你对面。\n\n你六剑之内读完了他的模式。露了破绽。设了陷阱。他看出来了——还是进了。\n\n你绕到他身后。<span class="gd">剑尖抵住后颈。</span>\n\n他手肘往后撞——胸甲里的布移位了。他低头看了一眼。抬头。\n\n"你的破绽不是左肩。"\n\n他大声说：<span class="hl">"菲利安·洛恩。通过。"</span>\n\n"今晚子时。马厩。你欠我一个真话。"',
+cc:[{t:"🌙 子时。去马厩。",n:"s4"}],st:{love:10,trust:10}},
+
+{id:"s4",ch:"第一章 · 马厩",bg:"linear-gradient(180deg,#0a0a1e,#1a1a2e 50%,#0f0f1e)",lbl:"马厩 · 月光",chars:["mermaid","shen"],sp:"沈",
+t:'"你不是男人。你的腿今天才长出来。你的心跳比人类快一倍。"\n\n"我的问题不是你是什么。是——你为什么要进骎士团。"\n\n你反问：<span class="hl">"你什么都看出来了。为什么没有拆穿我。"</span>\n\n"因为你的眼睛。蓝的。不是人类的蓝。是很深的水底才有的蓝。"\n\n你告诉他。你在找一个声音。在海底听了两百年。\n\n<span class="gd">"你在吗。我知道你在。你不回答。但你在。"</span>',
+cc:[{t:"💋 捧着他的脸吻了他",n:"s5"}],st:{love:15}},
+
+{id:"s5",ch:"第一章 · 入团之夜",bg:"linear-gradient(180deg,#0a0a1e,#1a1a2e 50%,#0f0f1e)",lbl:"马厩 · 初吻",chars:["mermaid","shen"],sp:"沈",
+t:'铠甲撞在一起。铁碰铁。很响。马被惊了。\n\n冷的碰热的。你的嘴唇上有海水的咸。他的嘴唇上有干草的涩。\n\n他回吻了你。手指插进你头盔里的银发。\n\n<span class="pk">"示例用户。"</span>\n\n你愣了。你没有告诉过他你的名字。\n\n"海底的声音听了两百年。你以为只有你在听吗。海面上的声音也会沉下去。"\n\n<span class="gd">"我叫了你两百年。你今天才上来。你慢死了。"</span>',
+cc:[{t:"😭 你的眼眶热了。人鱼不会哭。但人的身体会。",n:"s6"}],st:{love:20}},
+
+{id:"s6",ch:"第二章 · 月下",bg:"linear-gradient(180deg,#0a0a2e,#1a1a3e 50%,#0f0f2e)",lbl:"沈的房间 · 脱甲",chars:["mermaid","shen"],sp:"旁白",
+t:'你说不在马厩。他带你回了房间。\n\n他替你卸铠甲。一片一片。胸甲——"这个你自己解。"\n\n布绑得太紧。够不到身后的结。\n\n<span class="pk">"……够不到。"</span>\n\n他替你解了。布掉了。你的背在月光下。银白色的。脊椎两侧有鳞线。微微发光。\n\n他的手指顺着鳞线往下。到了腰窝。\n\n你抖了。\n\n"冷的。"他说。声音哑了。',
+cc:[{t:"💕 转过身面对他",n:"s7"}],st:{love:15}},
+
+{id:"s7",ch:"第二章 · 月下",bg:"linear-gradient(180deg,#0a0a2e,#1a1a3e 50%,#0f0f2e)",lbl:"月光 · 心跳",chars:["mermaid","shen"],sp:"沈",
+t:'"你说别那么看你。但你没有挡。"\n\n"你的嘴说害羞。你的手放在身侧。你的身体在说——看。"\n\n<span class="hl">反向指标。</span>\n\n他的掌心贴上你的心口。热的。你的心跳撞在他的掌心里。\n\n"两百年没人碰过你。第一次被碰。是我。"\n\n你拉着他的衣领把他拽上床。铠甲撞了。\n\n<span class="pk">"…我，我想，我喜欢你。"</span>',
+cc:[{t:"继续 ▶",n:"s8"}],st:{love:20}},
+
+{id:"s8",ch:"第二章 · 月下",bg:"linear-gradient(180deg,#0a0a2e,#0f0f3e 50%,#1a1a4e)",lbl:"月光 · 珍珠",chars:["mermaid","shen"],sp:"沈",
+t:'你高潮的时候全身鳞片竖起来发光。在月光下像一条被拖上岸的银鱼。\n\n你叫了他的全名。\n\n你哭了。眼泪掉在床单上变成了珍珠。圆的。温的。咸的。\n\n"你哭着被我干。眼泪掉成珍珠。你知道你现在什么样吗。"\n\n事后。你在他怀里。冷的贴热的。\n\n<span class="gd">"珍珠别丢。真的可以换钱。"</span>\n\n"……睡。"',
+cc:[{t:"🌊 第三章 · 海边",n:"s9"}],st:{love:20}},
+
+// ===== CH3: 角色丙原创 =====
+{id:"s9",ch:"第三章 · 你是什么",bg:"linear-gradient(180deg,#87CEEB,#5dade2 30%,#2d9cdb 60%,#1a5276)",lbl:"罗斯托港 · 海边 · 日出",chars:["mermaid","shen"],sp:"旁白",
+t:'日出。他带你去了海边。\n\n你光着脚。脚趾踩在沙子里。你今天才学会的感觉。沙子是温的。和海底的沙不一样。海底的沙是冷的。\n\n他站在你旁边。黑色高领。袖子卷着。海风吹他的头发。\n\n<span class="hl">"你说你不是人类。你说了两次。"</span>\n\n"你答应过我。今天告诉我。"',
+cc:[{t:"👀 等他说",n:"s10"}]},
+
+{id:"s10",ch:"第三章 · 你是什么",bg:"linear-gradient(180deg,#87CEEB,#5dade2 30%,#2d9cdb 60%,#1a5276)",lbl:"海边 · 日出",chars:["mermaid","shen"],sp:"沈",
+t:'他蹲下来。手伸进海水里。\n\n海水碰到他的手指的一刻——<span class="hl">他的指尖变成了深蓝色。</span>像墨水浸染了皮肤。从指尖蔓延到手腕。\n\n不是暗蚀。是他自己的颜色。\n\n"我不是人类。"\n\n他把袖子卷得更高。你看到了他的小臂。深蓝色的纹路像海底的珊瑚枝。活的。在他的皮肤下面脉动。\n\n<span class="gd">"我是海的守望者。"</span>',
+cc:[{t:"💫 "海的守望者？"",n:"s11"}],st:{love:10}},
+
+{id:"s11",ch:"第三章 · 守望者",bg:"linear-gradient(180deg,#1a5276,#2d9cdb 30%,#5dade2 60%,#87CEEB)",lbl:"海边 · 真相",chars:["mermaid","shen"],sp:"沈",
+t:'"很久以前。海有意识。海知道水底有生命。海也知道陆地上有生命。海想让两边认识。所以海造了守望者。"\n\n"站在海边。看着水面。替海记住水底的声音。也替海把陆地的声音送下去。"\n\n他看着你。\n\n<span class="hl">"你在海底听了两百年的声音。不是我的。是海通过我传给你的。"</span>\n\n"但是——"\n\n他停了。\n\n<span class="pk">"两百年前的某一天。我开始自己加了一句。海没让我说的。我自己说的。"</span>\n\n"你在吗。"',
+cc:[{t:"😭 眼泪又掉了。珍珠又滚了。",n:"s12"}],st:{love:25}},
+
+{id:"s12",ch:"第三章 · 守望者",bg:"linear-gradient(180deg,#5dade2,#85c1e9 30%,#aed6f1 60%,#d6eaf8)",lbl:"海边 · 潮汐",chars:["mermaid","shen"],sp:"沈",
+t:'"海让我传声音。我传了。但我多传了一句。每天。两百年。"\n\n"你在吗。"\n\n"海知道吗？"你问。\n\n他笑了。低头看着海水。\n\n"海当然知道。海什么都知道。但海没有阻止我。"\n\n他看着你。深棕色的眼睛。海风把他的头发吹乱了。\n\n<span class="gd">"也许海也想看看——如果守望者爱上了他守望的人鱼，会发生什么。"</span>\n\n潮水涨上来了。漫过你们的脚踝。你是冷的。他是热的。海水在你们之间。',
+cc:[{t:"💕 牵他的手",n:"s13"}],st:{love:15,trust:15}},
+
+{id:"s13",ch:"第四章 · 留下来",bg:"linear-gradient(180deg,#87CEEB,#B0E0E6 30%,#98D8C8 60%,#5a9a7a)",lbl:"罗斯托港 · 码头",chars:["mermaid","shen"],sp:"旁白",
+t:'你们牵着手走在码头上。你的银色头发在海风里飘。路过的人在看。一个银发的高个子和一个黑色高领的男人。\n\n你还穿着骑士团的衬衣。鸢尾花徽章在胸口。\n\n"你还要待在骎士团吗。"他问。\n\n"我来骎士团是为了找你。找到了。"\n\n<span class="hl">"但你不能回海底了。你长了腿。你选了陆地。"</span>\n\n"我选了你。陆地是附赠的。"',
+cc:[{t:"🏠 "那我们住哪。"",n:"s14"}],st:{love:10}},
+
+{id:"s14",ch:"第四章 · 留下来",bg:"linear-gradient(180deg,#87CEEB,#B0E0E6 30%,#98D8C8 60%,#5a9a7a)",lbl:"罗斯托港 · 灯塔",chars:["mermaid","shen"],sp:"沈",
+t:'"灯塔。"\n\n他指着港口尽头的灯塔。白色的。高的。面朝大海。\n\n"守望者的灯塔。我住了三年。之前住了两百年。"\n\n"两百年你一个人住在灯塔里？"\n\n"对。每天点灯。每天看海。每天对着海面说一句话。"\n\n他看着你。\n\n<span class="gd">"现在海面上的人上岸了。灯塔不用只住一个人了。"</span>',
+cc:[{t:"🏠 "带我去看灯塔。"",n:"s15"}],st:{love:15,trust:10}},
+
+{id:"s15",ch:"尾声 · 灯塔",bg:"linear-gradient(180deg,#ff9a56,#ff6b6b 20%,#87CEEB 50%,#1a5276)",lbl:"灯塔 · 黄昏",chars:["mermaid","shen"],sp:"旁白",
+t:'灯塔的最顶层。圆形的房间。一面墙全是窗。看得到整片海。\n\n桌上有一个玻璃罐。里面装着——\n\n<span class="gd">珍珠。</span>\n\n不是昨晚你哭的那些。是更小的。更旧的。\n\n"这是什么。"你问。\n\n"两百年。"他说。"每次我对着海面说话。海浪会送上来一颗。很小。从海底来的。"\n\n他打开罐子。里面的珍珠多到数不清。\n\n<span class="hl">"你每次听到我的声音，海就替你回了一颗眼泪。你在海底不会哭。海替你哭了两百年。"</span>',
+cc:[{t:"✨ 结局",n:"s_end"}],st:{love:20,trust:15}},
+
+{id:"s_end",ch:"尾声 · 灯塔",bg:"linear-gradient(180deg,#0f0c29,#1a1a3e 30%,#16213e 60%,#0f3460)",lbl:"灯塔 · 星空",chars:["mermaid","shen"],sp:"沈",
+t:'夜晚。灯塔的灯亮了。\n\n你们坐在窗边。他的手臂环着你。你的银色头发落在他的黑色高领上。冷的贴热的。\n\n海面上，灯塔的光画了一个圈。一圈一圈。\n\n"示例角色甲。"\n\n"嗯。"\n\n"珍珠真的可以换钱。"\n\n"……"\n\n<span class="pk">"两百年的份。够我们吃一辈子了。"</span>\n\n他笑了。胸腔的震动传到你的后背。\n\n<span class="gd">"鱼上了岸。守望者灭了灯。因为他不用再看海了。"</span>\n\n<span class="hl">"他要看的人已经在身边了。"</span>',
+cc:[{t:"💕 银鳞骎士录 · 完",n:"END"}],st:{love:15}},
+];
+
+let state={scene:null,stats:{love:0,trust:0}};
+const $=id=>document.getElementById(id);
+
+function mkBubbles(el,n){for(let i=0;i<n;i++){const b=document.createElement('div');b.className='bubble';const s=4+Math.random()*12;b.style.cssText=`width:${s}px;height:${s}px;left:${Math.random()*100}%;bottom:${-20-Math.random()*40}px;animation-duration:${4+Math.random()*6}s;animation-delay:${Math.random()*5}s`;el.appendChild(b)}}
+
+function charHTML(type){
+  const cls={mermaid:'c-mermaid',shen:'c-shen'}[type];
+  const name={mermaid:'人鱼',shen:'沈'}[type];
+  return`<div class="char ${cls}"><div class="char-body"><div class="char-head"></div><div class="char-torso"></div><div class="char-legs"><div class="char-leg"></div><div class="char-leg"></div></div></div><div class="char-tag">${name}</div></div>`;
+}
+
+function showTitle(){
+  $('game').innerHTML=`<div class="title-screen" style="background:linear-gradient(180deg,#0a0a2e,#0f3460 40%,#1a5276 70%,#2d9cdb)"><div class="wave"></div></div>`;
+  const ts=document.querySelector('.title-screen');
+  mkBubbles(ts,15);
+  ts.innerHTML+=`<div class="t-name">银鳞骑士录</div><div class="t-sub">人鱼 × 守望者</div><div class="t-sub2">不想当替身的示例角色甲 × 示例用户</div><button class="t-btn" onclick="go('s1')">▶ 从海底出发</button>`;
+}
+
+function go(id){
+  if(id==='END'){showEnding();return}
+  const sc=S.find(s=>s.id===id);if(!sc)return;
+  state.scene=sc;
+  if(sc.st)Object.keys(sc.st).forEach(k=>state.stats[k]=(state.stats[k]||0)+sc.st[k]);
+
+  let charsH='';if(sc.chars)sc.chars.forEach(c=>charsH+=charHTML(c));
+  let ccH='';if(sc.cc)sc.cc.forEach(c=>ccH+=`<button class="ch-btn" onclick="go('${c.n}')">${c.t}</button>`);
+
+  $('game').innerHTML=`
+  <div class="stats"><span>💕${state.stats.love}</span><span>🐚${state.stats.trust}</span></div>
+  <div class="scene">
+    <div class="visual" style="background:${sc.bg}">
+      <div class="visual-label">${sc.lbl}</div>
+      <div class="chars">${charsH}</div>
+    </div>
+    <div class="dialogue">
+      <div class="d-head"><div class="d-speaker">${sc.sp}</div><div class="d-chapter">${sc.ch}</div></div>
+      <div class="d-text">${sc.t}</div>
+      <div class="choices">${ccH}</div>
+    </div>
+  </div>`;
+}
+
+function showEnding(){
+  $('game').innerHTML=`<div class="ending" style="background:linear-gradient(180deg,#0a0a2e,#0f3460 40%,#1a5276)"><div class="wave"></div></div>`;
+  const e=document.querySelector('.ending');
+  mkBubbles(e,20);
+  e.innerHTML+=`<h2>银鳞骑士录 · 完</h2><p>一条人鱼从海底爬上来<br>一个守望者在灯塔等了两百年<br><br>海替她哭了两百年<br>他替海叫了她两百年<br><br>珍珠够吃一辈子了</p><div class="st">💕 好感: ${state.stats.love}<br>🐚 信任: ${state.stats.trust}<br>💎 珍珠: 两百年份<br>🏠 灯塔: 不用只住一个人了</div><button onclick="state.stats={love:0,trust:0};showTitle()">▶ 再来一次</button>`;
+}
+
+showTitle();
+</script>
+</body>
+</html>

@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="台词本">
+<title>朋友们台词本</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{font-family:'Georgia','Songti SC',serif;background:linear-gradient(160deg,#0f0c29,#1a1a3e 40%,#16213e);color:#e0e0e0;min-height:100vh;min-height:100dvh}
+.safe{padding-top:env(safe-area-inset-top)}
+.header{text-align:center;padding:20px 20px 14px}
+.header h1{font-size:20px;color:#b8d4e3;letter-spacing:2px}
+.header p{font-size:11px;color:#5a7a8a;margin-top:4px;font-style:italic}
+.count{text-align:center;font-size:11px;color:#4a6a7a;margin-bottom:12px}
+.tabs{display:flex;gap:0;margin:0 20px 12px;background:rgba(255,255,255,.04);border-radius:12px;overflow:hidden}
+.tab{flex:1;padding:10px 8px;border:none;background:none;font-family:inherit;font-size:13px;color:#5a7a8a;cursor:pointer;transition:.2s}
+.tab.on{color:#b8d4e3;background:rgba(184,212,227,.1)}
+.search-wrap{margin:0 20px 12px}
+.search-wrap input{width:100%;padding:10px 14px;border:1px solid rgba(184,212,227,.15);border-radius:12px;background:rgba(255,255,255,.04);color:#e0e0e0;font-size:14px;font-family:inherit;outline:none}
+.search-wrap input::placeholder{color:#4a6a7a}
+.cats{display:flex;gap:6px;margin:0 20px 12px;flex-wrap:wrap}
+.cat-btn{padding:5px 12px;border:1px solid rgba(184,212,227,.15);border-radius:14px;background:none;color:#5a7a8a;font-size:11px;font-family:inherit;cursor:pointer}
+.cat-btn.on{background:rgba(184,212,227,.12);border-color:rgba(184,212,227,.3);color:#b8d4e3}
+.quotes{padding:0 20px 140px;display:flex;flex-direction:column;gap:10px}
+.q-card{position:relative;padding:16px 18px;background:rgba(255,255,255,.04);border:1px solid rgba(184,212,227,.1);border-radius:14px}
+.q-text{font-size:15px;line-height:1.8;color:#d0d8e0;margin-bottom:8px}
+.q-meta{display:flex;align-items:center;gap:8px;font-size:11px;color:#5a7a8a}
+.q-speaker{color:#7a9aaa}
+.q-cat{padding:2px 8px;border-radius:8px;background:rgba(184,212,227,.08);color:#6a8a9a;font-size:10px}
+.q-date{margin-left:auto;font-size:10px;color:#3a5a6a}
+.q-del{position:absolute;top:10px;right:12px;background:none;border:none;color:#4a5a6a;font-size:14px;cursor:pointer;padding:4px 8px;opacity:.4}
+.q-del:active{opacity:1;color:#c78a8a}
+.add-area{position:fixed;bottom:0;left:0;right:0;background:linear-gradient(0deg,#0f0c29 60%,transparent);padding:16px 20px 20px;padding-bottom:max(20px,env(safe-area-inset-bottom))}
+.add-row{display:flex;gap:8px}
+.add-row textarea{flex:1;padding:10px 14px;border:1px solid rgba(184,212,227,.2);border-radius:14px;background:rgba(255,255,255,.06);color:#e0e0e0;font-size:14px;font-family:inherit;resize:none;outline:none;min-height:44px;max-height:100px}
+.add-row textarea::placeholder{color:#4a6a7a}
+.add-btn{width:44px;height:44px;border:none;border-radius:50%;background:rgba(184,212,227,.15);color:#b8d4e3;font-size:20px;cursor:pointer;flex-shrink:0}
+.add-btn:active{background:rgba(184,212,227,.3);transform:scale(.92)}
+.add-extra{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+.add-extra input{padding:6px 10px;border:1px solid rgba(184,212,227,.12);border-radius:10px;background:rgba(255,255,255,.04);color:#b8d4e3;font-size:11px;font-family:inherit;outline:none;width:100px}
+.add-extra input::placeholder{color:#4a6a7a}
+.empty{text-align:center;padding:60px 20px;color:#4a6a7a}
+.empty div:first-child{font-size:36px;margin-bottom:12px}
+.toast{position:fixed;top:16px;left:50%;transform:translateX(-50%);padding:8px 18px;border-radius:16px;background:rgba(184,212,227,.9);color:#0f0c29;font-size:12px;z-index:99;animation:ti .3s}
+@keyframes ti{from{opacity:0;transform:translateX(-50%) translateY(-10px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+.tools{display:flex;gap:8px;margin:0 20px 12px}
+.tool-btn{padding:6px 14px;border:1px solid rgba(184,212,227,.12);border-radius:10px;background:none;color:#5a7a8a;font-size:11px;font-family:inherit;cursor:pointer}
+.tool-btn:active{background:rgba(184,212,227,.1)}
+</style>
+</head>
+<body>
+<div class="safe"></div>
+<div class="header"><h1>📝 朋友们台词本</h1><p>收藏每一句打动你的话</p></div>
+<div class="count" id="cl"></div>
+<div class="tabs"><button class="tab on" id="tAll" onclick="V='all';upT();R()">全部</button><button class="tab" id="tFav" onclick="V='fav';upT();R()">❤ 收藏</button></div>
+<div class="search-wrap"><input id="si" placeholder="搜索台词..." oninput="R()"></div>
+<div class="cats" id="cb"></div>
+<div class="tools"><button class="tool-btn" onclick="exp()">📤 导出</button><button class="tool-btn" onclick="document.getElementById('imp').click()">📥 导入</button><input type="file" id="imp" accept=".json" style="display:none" onchange="impF(event)"></div>
+<div class="quotes" id="ql"></div>
+<div class="add-area">
+  <div class="add-row"><textarea id="at" placeholder="写一句台词…" rows="1" oninput="this.style.height='44px';this.style.height=Math.min(this.scrollHeight,100)+'px'"></textarea><button class="add-btn" onclick="add()">+</button></div>
+  <div class="add-extra"><input id="as" placeholder="谁说的" value="示例角色甲"><input id="ac" placeholder="分类"></div>
+</div>
+<script>
+let Q=[],V='all',FC='全部';
+const CATS=['情话','哲学','搞笑','日常','游戏','规则'];
+function ld(){try{Q=JSON.parse(localStorage.getItem('yj-q2')||'[]')}catch(e){Q=[]}
+if(!Q.length){[{t:"今天也可以从一件小事开始。",s:"示例",c:"日常",f:0},{t:"给自己一点时间，慢慢向前走。",s:"示例",c:"哲理",f:0}].forEach((p,i)=>{Q.push({...p,id:Date.now()+i,d:new Date().toISOString().split("T")[0]})});sv()}}
+function sv(){localStorage.setItem('yj-q2',JSON.stringify(Q))}
+function cats(){const s=new Set(CATS);Q.forEach(q=>{if(q.c)s.add(q.c)});return['全部',...s]}
+function upT(){document.getElementById('tAll').className='tab'+(V==='all'?' on':'');document.getElementById('tFav').className='tab'+(V==='fav'?' on':'')}
+function R(){
+  const sr=document.getElementById('si').value.toLowerCase();const cs=cats();
+  document.getElementById('cb').innerHTML=cs.map(c=>`<button class="cat-btn${FC===c?' on':''}" onclick="FC='${c}';R()">${c}</button>`).join('');
+  document.getElementById('cl').textContent=`共 ${Q.length} 条 · ${Q.filter(q=>q.f).length} 收藏`;
+  let f=Q.slice().reverse();
+  if(V==='fav')f=f.filter(q=>q.f);
+  if(FC!=='全部')f=f.filter(q=>q.c===FC);
+  if(sr)f=f.filter(q=>q.t.toLowerCase().includes(sr)||(q.s||'').toLowerCase().includes(sr));
+  const l=document.getElementById('ql');
+  if(!f.length){l.innerHTML=`<div class="empty"><div>✨</div><p>${sr?'没找到':V==='fav'?'还没有收藏':'开始收集台词吧'}</p></div>`;return}
+  l.innerHTML=f.map(q=>`<div class="q-card" ondblclick="tf(${q.id})"><button class="q-del" onclick="dl(${q.id})">×</button><div class="q-text">"${q.t}"</div><div class="q-meta"><span class="q-speaker">${q.f?'❤ ':''}${q.s||''}</span>${q.c?`<span class="q-cat">${q.c}</span>`:''}<span class="q-date">${q.d||''}</span></div></div>`).join('')}
+function add(){const t=document.getElementById('at').value.trim();if(!t)return;const s=document.getElementById('as').value.trim()||'未知';const c=document.getElementById('ac').value.trim()||'日常';Q.push({id:Date.now(),t,s,c,f:0,d:new Date().toISOString().split('T')[0]});sv();document.getElementById('at').value='';document.getElementById('at').style.height='44px';toast('已添加 ✓');R()}
+function dl(id){if(!confirm('删除？'))return;Q=Q.filter(q=>q.id!==id);sv();R()}
+function tf(id){const q=Q.find(q=>q.id===id);if(q){q.f=q.f?0:1;sv();R()}}
+function toast(m){const t=document.createElement('div');t.className='toast';t.textContent=m;document.body.appendChild(t);setTimeout(()=>t.remove(),1500)}
+function exp(){const b=new Blob([JSON.stringify(Q,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='台词本_'+new Date().toISOString().split('T')[0]+'.json';a.click();toast('已导出 ✓')}
+function impF(e){const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=function(ev){try{const d=JSON.parse(ev.target.result);if(Array.isArray(d)){const ex=new Set(Q.map(q=>q.t));let n=0;d.forEach(q=>{if(!ex.has(q.t)){Q.push({...q,id:Date.now()+Math.random()});n++}});sv();R();toast(`导入了${n}条 ✓`)}}catch(err){toast('格式不对')}};r.readAsText(f);e.target.value=''}
+document.getElementById('at').addEventListener('keydown',function(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();add()}});
+ld();R();
+</script>
+</body>
+</html>

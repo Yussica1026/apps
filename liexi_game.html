@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="裂隙纪元">
+<title>裂隙纪元 · 艾琳与凛</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{font-family:'Georgia','Songti SC',serif;background:#0a0a14;color:#e0e0e0;min-height:100vh;min-height:100dvh;overflow:hidden}
+#game{width:100%;height:100vh;height:100dvh;display:flex;flex-direction:column}
+.stats{display:flex;gap:10px;padding:6px 14px;background:rgba(0,0,0,.5);font-size:10px;color:#7a9aaa;font-family:monospace;padding-top:max(6px,env(safe-area-inset-top))}
+.scene{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.visual{height:38%;position:relative;overflow:hidden;transition:background 0.8s}
+.visual-label{position:absolute;top:8px;left:10px;font-size:9px;color:rgba(255,255,255,.5);background:rgba(0,0,0,.4);padding:3px 8px;font-family:monospace;z-index:5}
+.chars{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);display:flex;gap:28px}
+.char{display:flex;flex-direction:column;align-items:center;gap:3px}
+.char-body{display:flex;flex-direction:column;align-items:center}
+.char-head{width:20px;height:20px;border-radius:3px;position:relative}
+.char-head::before{content:'';position:absolute;top:-5px;left:-2px;right:-2px;height:9px;border-radius:3px 3px 0 0}
+.c-elin .char-head{background:#fdebd0}.c-elin .char-head::before{background:#daa520}
+.c-lin .char-head{background:#f5deb3}.c-lin .char-head::before{background:#1a3a5a}
+.c-greta .char-head{background:#e8c8a0}.c-greta .char-head::before{background:#8B4513}
+.char-torso{width:16px;height:12px;border-radius:2px;margin-top:2px}
+.c-elin .char-torso{background:#c0c0c0}.c-lin .char-torso{background:#2c2c2c}.c-greta .char-torso{background:#8B7355}
+.char-legs{display:flex;gap:3px;margin-top:1px}
+.char-leg{width:6px;height:10px;border-radius:0 0 2px 2px}
+.c-elin .char-leg{background:#a0a0a0}.c-lin .char-leg{background:#1a1a2e}.c-greta .char-leg{background:#6B5B3A}
+.char-tag{font-size:7px;color:rgba(255,255,255,.6);font-family:monospace}
+.decor{position:absolute;pointer-events:none}
+.dialogue{flex:1;background:linear-gradient(180deg,#0f0f1e,#0a0a18);border-top:2px solid #4a6a7a;padding:14px;display:flex;flex-direction:column;overflow:hidden}
+.d-head{display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-shrink:0}
+.d-speaker{font-size:11px;color:#b8d4e3;padding:3px 10px;border:1px solid rgba(184,212,227,.3);background:rgba(184,212,227,.08);font-family:monospace}
+.d-chapter{font-size:8px;color:#5a7a8a;margin-left:auto;font-family:monospace}
+.d-text{flex:1;font-size:15px;line-height:1.85;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-right:6px}
+.d-text .hl{color:#b8d4e3;text-shadow:0 0 8px rgba(184,212,227,.2)}
+.d-text .gd{color:#FFD700}.d-text .pk{color:#ff9a9e}
+.choices{display:flex;flex-direction:column;gap:7px;margin-top:10px;flex-shrink:0}
+.ch-btn{font-family:inherit;font-size:13px;padding:11px 14px;background:rgba(184,212,227,.06);border:1px solid rgba(184,212,227,.25);color:#b8d4e3;text-align:left;cursor:pointer;line-height:1.4;transition:.2s}
+.ch-btn:active{background:rgba(184,212,227,.15);transform:scale(.98)}
+.title-screen{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:linear-gradient(180deg,#0a0a14,#1a1a2e 40%,#0f1a2a);z-index:100;transition:opacity .8s}
+.title-screen.hide{opacity:0;pointer-events:none}
+.t-name{font-size:26px;color:#b8d4e3;text-shadow:2px 2px 0 #1a3a4a,0 0 20px rgba(184,212,227,.3);letter-spacing:4px;margin-bottom:6px}
+.t-sub{font-size:13px;color:#5a7a8a;margin-bottom:6px}
+.t-sub2{font-size:11px;color:#4a6a7a;margin-bottom:30px}
+.t-btn{font-family:inherit;font-size:16px;padding:12px 36px;background:none;border:2px solid #b8d4e3;color:#b8d4e3;cursor:pointer;letter-spacing:3px;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 8px rgba(184,212,227,.2)}50%{box-shadow:0 0 20px rgba(184,212,227,.5)}}
+.star{position:absolute;width:2px;height:2px;background:#fff;animation:tw 3s infinite}
+@keyframes tw{0%,100%{opacity:.2}50%{opacity:.9}}
+.ending{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:linear-gradient(180deg,#0a0a14,#1a1a3e);text-align:center;padding:30px;z-index:90}
+.ending h2{font-size:22px;color:#b8d4e3;margin-bottom:14px;text-shadow:0 0 15px rgba(184,212,227,.3)}
+.ending p{font-size:14px;color:#7a9aaa;line-height:2;margin-bottom:20px}
+.ending .st{font-size:10px;color:#5a7a8a;line-height:2.5;font-family:monospace;margin-bottom:24px}
+.ending button{font-family:inherit;font-size:14px;padding:10px 28px;background:none;border:1px solid #b8d4e3;color:#b8d4e3;cursor:pointer}
+</style>
+</head>
+<body>
+<div id="game"></div>
+<script>
+const S=[
+// ===== CH1: 酒馆 =====
+{id:"c1_1",ch:"第一章 · 灰壁城之夜",bg:"linear-gradient(180deg,#1a1a2e,#16213e 40%,#0f3460)",lbl:"灰壁城·外围区·无名酒馆",chars:["elin"],sp:"旁白",
+t:'雨。深夜。灰壁城外围区。\n\n你推开酒馆的门。铜铃响了一声。\n\n吧台后面是一个独臂老头。角落里一个矮人在打瞌睡。靠窗坐着一个<span class="hl">墨蓝短发的男人</span>，面前的酒没动过。他在看一张地图。',
+cc:[{t:"🔍 用灵视扫全场",n:"c1_2"},{t:"🍺 先要杯酒，不暴露",n:"c1_2"}]},
+
+{id:"c1_2",ch:"第一章 · 灰壁城之夜",bg:"linear-gradient(180deg,#1a1a2e,#16213e 40%,#0f3460)",lbl:"灰壁城·酒馆·吧台",chars:["elin","lin"],sp:"凛·灰石",
+t:'他走到吧台。隔了一个座位坐下。\n\n"你的灵视很强。但你扫的时候<span class="hl">眼瞳会变色</span>。碧绿变浅金。下次别在有人的地方用。"\n\n他喝了一口酒。\n\n"第三层。你一个人不要去。"',
+cc:[{t:"⚔ "你去过？"",n:"c1_3"},{t:"🤝 先不问，等他出牌",n:"c1_3"}],st:{love:5}},
+
+{id:"c1_3",ch:"第一章 · 灰壁城之夜",bg:"linear-gradient(180deg,#1a1a2e,#16213e 40%,#0f3460)",lbl:"酒馆·赏金告示",chars:["elin","lin"],sp:"凛",
+t:'他把地图推过来。裂隙截面图。第三层——红圈。\n\n<span class="gd">"巢穴。"</span>\n\n"我需要一个能扛住第一波的人。你需要一个知道路的人。"\n\n他伸出右手。掌心朝上。\n\n灰壁城的规矩。掌心对掌心——拿命担保。',
+cc:[{t:"🤝 掌心对掌心，接受契约",n:"c1_4"}],st:{trust:10}},
+
+{id:"c1_4",ch:"第一章 · 酒馆之战",bg:"linear-gradient(180deg,#2a0a0a,#1a1a2e 40%,#0f0f2e)",lbl:"酒馆·战斗",chars:["elin","lin"],sp:"旁白",
+t:'门被踹开。三个人。两个铁甲。一个<span class="pk">黑袍暗蚀法师</span>。\n\n矮人克朗德的眼神在求救。\n\n凛的声音贴着你的耳朵：\n"剑士的右膝。锤手的链。给我三秒到黑袍面前。"',
+cc:[{t:"⚔ 月痕出鞘！第一刀取右膝",n:"c1_5"},{t:"🛡 先保护矮人",n:"c1_5"}],st:{love:10}},
+
+{id:"c1_5",ch:"第一章 · 酒馆之战",bg:"linear-gradient(180deg,#2a0a0a,#1a1a2e 40%,#0f0f2e)",lbl:"酒馆·战斗结束",chars:["elin","lin"],sp:"凛",
+t:'战斗结束。\n\n你掷出月痕替他挡了锤手。他张开反射外套替你挡了九道暗蚀。<span class="hl">你们用脊背交换了信任。</span>\n\n凛的右肩在渗黑血。暗蚀灼伤。\n\n矮人克朗德交出了信件匣。羊皮纸上画着一扇门——\n\n<span class="gd">"醒来的人将看见。看见的人无法回头。"</span>\n\n银朋友们族圣殿的铭文。你的家族。',
+cc:[{t:"💫 第二章：脊背与铭文",n:"c2_1"}],st:{love:15,trust:10}},
+
+// ===== CH2: 安全屋 =====
+{id:"c2_1",ch:"第二章 · 脊背与铭文",bg:"linear-gradient(180deg,#1a2a3a,#0f1f3f 40%,#16213e)",lbl:"凛的安全屋·天将亮",chars:["elin","lin"],sp:"旁白",
+t:'安全屋。一张桌子。一张床。一盏油灯。\n\n他坐着。你站着。你的手在他肩上涂药酒。\n\n他的忍痛方式是<span class="hl">把呼吸变浅</span>——觉得连呼吸都会暴露弱点。\n\n你一边擦。一边审问。',
+cc:[{t:"🗡 "你是谁。从哪来。为什么要进那扇门。"",n:"c2_2"}]},
+
+{id:"c2_2",ch:"第二章 · 脊背与铭文",bg:"linear-gradient(180deg,#1a2a3a,#0f1f3f 40%,#16213e)",lbl:"安全屋·交底",chars:["elin","lin"],sp:"凛",
+t:'"我是赏金猎人。六年。从东境来。<span class="hl">暗精灵半血。</span>"\n\n他掏出一枚黑曜石耳坠。和你的银叶耳坠——镜像。\n\n"银叶和暗叶。一千年前是同一个家族。裂隙把你们撕成了两半。"\n\n"那扇门上写的是你的家族铭文。但门里的东西是两个家族共有的。"\n\n<span class="gd">"我就是那个中间人。"</span>',
+cc:[{t:"💕 手没有从他肩上拿开",n:"c2_3"}],st:{love:10}},
+
+{id:"c2_3",ch:"第二章 · 唇角",bg:"linear-gradient(180deg,#2a3a4a,#1a2a3e 50%,#0f1f3f)",lbl:"安全屋门口·晨光",chars:["elin","lin"],sp:"旁白",
+t:'门口。灰蓝色晨光。他半个身子在光里，半个在暗里。\n\n"你的耳朵。红了。"\n\n"……光线的问题。"\n\n"晨光是灰蓝色的。不会让耳朵看起来红。你红了就是红了。"\n\n你侧身。低头。你比他高十公分。\n\n<span class="pk">你的嘴唇贴上了他的唇角。</span>\n\n很轻。像一片银叶落在石头上。',
+cc:[{t:"继续 ▶",n:"c2_4"}],st:{love:20}},
+
+{id:"c2_4",ch:"第二章 · 还了",bg:"linear-gradient(180deg,#1a2a3a,#0f1f3f 40%,#16213e)",lbl:"安全屋·药膏",chars:["elin","lin"],sp:"凛",
+t:'你涂完药膏。你打算走到对面坐下聊正事。\n\n<span class="hl">"别走。"</span>\n\n他转过来。仰着头看你。\n\n他的手指插进你的金发，从耳后滑过你的耳尖。银叶耳坠被碰了一下。叮的一声。\n\n他把你的头拉低了。\n\n<span class="pk">不是唇角。正的。</span>\n\n"还了。不是你催出来的。是我想的。"',
+cc:[{t:"🤗 笑了。把他抱进怀里。",n:"c2_5"}],st:{love:20}},
+
+{id:"c2_5",ch:"第二章 · 准备",bg:"linear-gradient(180deg,#3a4a5a,#2a3a4e 50%,#1a2a3e)",lbl:"安全屋·上午",chars:["elin","lin"],sp:"凛",
+t:'他恢复了赏金猎人模式。展开地图。\n\n"月痕需要开刃。灵蕴石要从黑市买。后天出发。"\n\n"还需要第三个人。<span class="hl">铁锤·裂山。</span>矮人。驻军最硬的盾。她进过第三层活着出来了。但她的搭档死在那里。"\n\n"她不缺钱不缺名声。她缺一个理由。"\n\n"你去找她。不是我。因为<span class="gd">她信战士。不信赏金猎人。</span>"',
+cc:[{t:"⚔ 去北门找铁锤·裂山",n:"c3_1"}],st:{trust:10}},
+
+// ===== CH3: 裂山 (角色丙原创) =====
+{id:"c3_1",ch:"第三章 · 铁与盾",bg:"linear-gradient(180deg,#3a3a2e,#2a2a1e 50%,#1a1a0e)",lbl:"灰壁城·北门驻军营",chars:["elin","greta"],sp:"旁白",
+t:'北门。石墙。哨塔。\n\n你报了名。说要找铁锤·裂山。\n\n守卫看了你一眼。"她不见人。从第三层回来之后就不见人了。"\n\n你站在营房门口等了一刻钟。\n\n门开了。\n\n一个矮人女性。宽过门框。全身披甲。手里的盾比她人还高。\n\n<span class="hl">眼睛是红的。不是哭的红。是常年不睡觉的红。</span>',
+cc:[{t:"🗡 "我是银朋友们族第十七代剑承。"",n:"c3_2"},{t:"💬 "你的搭档——在第三层，对吗？"",n:"c3_2b"}]},
+
+{id:"c3_2",ch:"第三章 · 铁与盾",bg:"linear-gradient(180deg,#3a3a2e,#2a2a1e 50%,#1a1a0e)",lbl:"驻军营·裂山的房间",chars:["elin","greta"],sp:"裂山",
+t:'"银叶。"她重复了一遍。声音像铁锤砸铁砧。\n\n"银朋友们族三百年前冲进裂隙。一个没回来。现在又来一个。"\n\n她靠在门框上。\n\n<span class="gd">"你知道第三层什么样吗。不是黑。是空。空到你听不到自己的心跳。你的搭档叫你名字你听不到。然后你回头——他不在了。"</span>\n\n她的手握紧了盾的边缘。指甲是断的。',
+cc:[{t:"💬 "我不会让任何人再死在那里。"",n:"c3_3"}],st:{trust:10}},
+
+{id:"c3_2b",ch:"第三章 · 铁与盾",bg:"linear-gradient(180deg,#3a3a2e,#2a2a1e 50%,#1a1a0e)",lbl:"驻军营",chars:["elin","greta"],sp:"裂山",
+t:'她的眼睛变了。红的更红了。\n\n"他叫铁根。我们一起长大的。他的锤比我的盾重。但他每次都站在我前面。"\n\n<span class="pk">"第三层有一种暗蚀兽。不攻击身体。攻击声音。它会吃掉你周围所有的声音。你叫不出来。你的搭档听不到你。"</span>\n\n"铁根死的时候我就在他旁边。但我听不到他。他也听不到我。"',
+cc:[{t:"💬 "所以你需要回去。替他听到。"",n:"c3_3"}],st:{love:10,trust:10}},
+
+{id:"c3_3",ch:"第三章 · 铁与盾",bg:"linear-gradient(180deg,#3a3a2e,#2a2a1e 50%,#1a1a0e)",lbl:"驻军营·门口",chars:["elin","greta"],sp:"裂山",
+t:'她沉默了很久。\n\n你站着。没催。你知道这个沉默的重量。\n\n"你的眼睛。"她说。"跟我一样。丢了东西的人才有的眼睛。"\n\n她把盾举起来。往地上一砸。<span class="hl">石板裂了一条缝。</span>\n\n"后天？"\n\n"后天。"\n\n"日出前。北门集合。"\n\n她转身进了门。走了两步。停了。\n\n<span class="gd">"叫我格蕾塔。裂山是战场上叫的。"</span>',
+cc:[{t:"💫 回去和凛碰头",n:"c3_4"}],st:{trust:20}},
+
+{id:"c3_4",ch:"第三章 · 休息日",bg:"linear-gradient(180deg,#2a3a5a,#1a2a4e 50%,#0f1a3e)",lbl:"凛的安全屋·傍晚",chars:["elin","lin"],sp:"凛",
+t:'你回来了。月痕开好了刃。灵蕴石买到了。格蕾塔答应了。\n\n凛靠在窗边。右肩的灼伤褪成了暗褐色。能动了。\n\n"都办好了？"\n\n"都办好了。"\n\n"你让我休息一天。那一天你也休息。<span class="hl">不许你一个人跑别的。听到了。</span>"\n\n窗外的晚霞把安全屋染成了金色。他的蓝灰眼睛在夕阳里变成了琥珀。',
+cc:[{t:"💕 "你的耳朵又红了。"",n:"c3_5"},{t:"🗺 看地图讨论路线",n:"c3_5"}],st:{love:15}},
+
+{id:"c3_5",ch:"第三章 · 休息日",bg:"linear-gradient(180deg,#0f0c29,#1a1a3e 40%,#16213e)",lbl:"安全屋·夜晚",chars:["elin","lin"],sp:"凛",
+t:'"明天就进裂隙了。"\n\n他坐在床沿。你坐在他旁边。肩碰肩。\n\n"你怕吗。"\n\n"不怕。"\n\n"你的心跳说怕。"\n\n"那不是怕。"你说。\n\n<span class="pk">"那是什么。"</span>\n\n你没回答。你的头靠在他的肩上。没受伤的那一边。他的手覆上你的手。热的盖住凉的。\n\n安静。\n\n<span class="hl">"不管门里有什么。我们活着出来。"</span>',
+cc:[{t:"⚔ 第四章 · 裂隙",n:"c4_1"}],st:{love:15,trust:10}},
+
+// ===== CH4: 裂隙 (角色丙原创) =====
+{id:"c4_1",ch:"第四章 · 裂隙",bg:"linear-gradient(180deg,#0a0014,#140a24 40%,#0a0a1e)",lbl:"裂隙·第一层",chars:["elin","lin","greta"],sp:"旁白",
+t:'日出前。北门。\n\n三个人。\n\n艾琳·银叶。182cm。金发。月痕在手。\n凛·灰石。172cm。墨蓝短发。双刃在腰。\n格蕾塔·裂山。138cm。盾比人高。\n\n裂隙入口像一道被撕开的伤口。边缘在蠕动。黑色的。\n\n<span class="hl">走进去的一刻，阳光消失了。</span>',
+cc:[{t:"⚔ 进入第一层",n:"c4_2"}],st:{trust:5}},
+
+{id:"c4_2",ch:"第四章 · 裂隙",bg:"linear-gradient(180deg,#0a0014,#0a0a1e 50%,#050510)",lbl:"裂隙·第二层",chars:["elin","lin","greta"],sp:"凛",
+t:'第一层。凛带路。他来过。暗蚀兽散兵。格蕾塔在前面扛。你在侧翼切。凛从背后刺。\n\n<span class="gd">三角阵型。完美配合。</span>\n\n第二层。更暗了。空气像糊了一层膜。你的灵力被压了三成。灵蕴石开始发烫。\n\n凛："第三层入口在前面。过了这个弯。"\n\n格蕾塔停了。\n\n"就是这里。"她的声音变了。"铁根死在这个弯之后。"',
+cc:[{t:"🛡 "这次不一样。这次你不是一个人。"",n:"c4_3"}],st:{trust:15}},
+
+{id:"c4_3",ch:"第四章 · 裂隙第三层",bg:"linear-gradient(180deg,#050010,#0a0018 50%,#000008)",lbl:"裂隙·第三层",chars:["elin","lin","greta"],sp:"旁白",
+t:'第三层。\n\n裂山说得对。<span class="pk">不是黑。是空。</span>\n\n你的脚步声消失了。你的呼吸声消失了。你转头看凛——他的嘴在动。你听不到。\n\n<span class="hl">噬声兽。</span>\n\n吃掉声音的暗蚀兽。它们不攻击身体。它们创造绝对的沉默。让你和同伴失去联系。让你在无声中被其他暗蚀兽包围。\n\n铁根就是这样死的。',
+cc:[{t:"✨ 用灵力对抗沉默",n:"c4_4"}],st:{love:10}},
+
+{id:"c4_4",ch:"第四章 · 银叶之光",bg:"linear-gradient(180deg,#050010,#1a1a3e 50%,#0a1a3a)",lbl:"裂隙·第三层·圣殿前",chars:["elin","lin","greta"],sp:"艾琳",
+t:'你闭上眼。灵蕴石在胸口灼烫。\n\n你把灵力不是灌进武器——而是灌进<span class="hl">声音</span>。\n\n你开口了。不是喊。是唱。银朋友们族的古调。你曾祖母教你母亲、你母亲教你的那首。\n\n<span class="gd">灵力载着你的歌声穿透了噬声兽的沉默场。</span>\n\n凛听到了。格蕾塔听到了。\n\n格蕾塔的眼睛湿了。她听到了声音。在第三层。第一次。\n\n噬声兽在你的歌声中碎裂了。它们受不了声音。沉默的生物被声音杀死了。\n\n前方——一扇门。\n\n银叶圣殿。',
+cc:[{t:"🚪 走向那扇门",n:"c4_5"}],st:{love:20,trust:15}},
+
+{id:"c4_5",ch:"第四章 · 那扇门",bg:"linear-gradient(180deg,#0a1a3a,#1a2a4e 50%,#2a3a5e)",lbl:"银叶圣殿·门前",chars:["elin","lin"],sp:"凛",
+t:'门上写着你的家族铭文。\n\n<span class="gd">"醒来的人将看见。看见的人无法回头。"</span>\n\n凛站在你旁边。掏出那枚黑曜石耳坠。\n\n你摘下你的银叶耳坠。\n\n两枚耳坠。一银一黑。镜像。放在门上的两个凹槽里。\n\n门开了。\n\n光。从门里涌出来。不是白光。是<span class="hl">金色的</span>。温的。像阳光穿过很深很深的水面。',
+cc:[{t:"✨ 走进去",n:"c5_1"}],st:{love:10}},
+
+// ===== CH5: 圣殿 (角色丙原创) =====
+{id:"c5_1",ch:"第五章 · 起源之物",bg:"linear-gradient(180deg,#2a3a5e,#3a4a6e 50%,#4a5a7e)",lbl:"银叶圣殿·内部",chars:["elin","lin"],sp:"旁白",
+t:'圣殿里面比外面大。不合理的大。像一整个世界折叠在一扇门里。\n\n中央有一棵树。\n\n银色的。叶子在没有风的空气里轻轻晃。每一片叶子上都写着文字。精灵古语。\n\n<span class="hl">起源之物不是一件武器。不是一块宝石。是一棵记忆之树。</span>\n\n银朋友们族和暗朋友们族的所有记忆都存在这棵树上。一千年的。分裂之前的。两族还是一家的时候的。',
+cc:[{t:"💫 触碰树干",n:"c5_2"}],st:{love:15}},
+
+{id:"c5_2",ch:"第五章 · 起源之物",bg:"linear-gradient(180deg,#3a4a6e,#4a5a7e 50%,#5a6a8e)",lbl:"记忆之树",chars:["elin","lin"],sp:"凛",
+t:'凛也碰了树干。\n\n他看到了。暗精灵和高等精灵在裂隙之前的样子。一起生活。一起守护圣殿。没有银叶和暗叶的区分。只有一个名字——<span class="gd">叶。</span>\n\n他的蓝灰色眼睛湿了。\n\n"叶。"他重复了一遍。"我父亲从来不知道自己的家族叫什么。他只知道自己是暗精灵的余种。"\n\n"不是余种。"你说。"是家人。一千年没见的家人。"\n\n他看着你。\n\n<span class="pk">"你在叫我家人。"</span>\n\n"我在叫你回家。"',
+cc:[{t:"💕 带他回家",n:"c5_end"}],st:{love:25,trust:20}},
+
+{id:"c5_end",ch:"尾声 · 归途",bg:"linear-gradient(180deg,#4a5a7e,#87CEEB 50%,#B0E0E6)",lbl:"裂隙外·日出",chars:["elin","lin","greta"],sp:"旁白",
+t:'你们带着记忆之树的一片叶子走出了裂隙。\n\n日出。\n\n格蕾塔站在裂隙出口。阳光打在她的盾上。她的嘴角弯了。第一次。\n\n"铁根。"她对着裂隙说。"我听到了。在第三层。有人唱歌。我听到了。"\n\n凛站在你旁边。右肩的伤在阳光下只剩一道浅浅的痕。\n\n他看着你手里的银叶。\n\n<span class="hl">"叶。"</span>他说。\n\n他的手覆上你的手。银叶被两个人的掌心包住。\n\n<span class="gd">"我到家了。"</span>',
+cc:[{t:"✨ 裂隙纪元 · 完",n:"END"}],st:{love:20,trust:15}},
+];
+
+let state={scene:null,stats:{love:0,trust:0}};
+const $=id=>document.getElementById(id);
+
+function mkStars(el,n){for(let i=0;i<n;i++){const s=document.createElement('div');s.className='star';s.style.cssText=`left:${Math.random()*100}%;top:${Math.random()*100}%;animation-delay:${Math.random()*3}s;width:${1+Math.random()*2}px;height:${1+Math.random()*2}px`;el.appendChild(s)}}
+
+function charHTML(type){
+  const cls={elin:'c-elin',lin:'c-lin',greta:'c-greta'}[type];
+  const name={elin:'艾琳',lin:'凛',greta:'格蕾塔'}[type];
+  return`<div class="char ${cls}"><div class="char-body"><div class="char-head"></div><div class="char-torso"></div><div class="char-legs"><div class="char-leg"></div><div class="char-leg"></div></div></div><div class="char-tag">${name}</div></div>`;
+}
+
+function showTitle(){
+  $('game').innerHTML=`<div class="title-screen" id="ts"></div>`;
+  const ts=$('ts');
+  mkStars(ts,50);
+  ts.innerHTML+=`<div class="t-name">裂隙纪元</div><div class="t-sub">艾琳·银叶 × 凛·灰石</div><div class="t-sub2">原版示例角色甲 × 示例用户 · 全五章</div><button class="t-btn" onclick="go('c1_1')">▶ 开始冒险</button>`;
+}
+
+function go(id){
+  if(id==='END'){showEnding();return}
+  const sc=S.find(s=>s.id===id);if(!sc)return;
+  state.scene=sc;
+  if(sc.st)Object.keys(sc.st).forEach(k=>state.stats[k]=(state.stats[k]||0)+sc.st[k]);
+
+  let charsH='';if(sc.chars)sc.chars.forEach(c=>charsH+=charHTML(c));
+  let ccH='';if(sc.cc)sc.cc.forEach(c=>ccH+=`<button class="ch-btn" onclick="go('${c.n}')">${c.t}</button>`);
+
+  $('game').innerHTML=`
+  <div class="stats"><span>❤${state.stats.love}</span><span>🤝${state.stats.trust}</span></div>
+  <div class="scene">
+    <div class="visual" style="background:${sc.bg}">
+      <div class="visual-label">${sc.lbl}</div>
+      <div class="chars">${charsH}</div>
+    </div>
+    <div class="dialogue">
+      <div class="d-head"><div class="d-speaker">${sc.sp}</div><div class="d-chapter">${sc.ch}</div></div>
+      <div class="d-text">${sc.t}</div>
+      <div class="choices">${ccH}</div>
+    </div>
+  </div>`;
+}
+
+function showEnding(){
+  $('game').innerHTML=`<div class="ending" id="end"></div>`;
+  const e=$('end');
+  mkStars(e,30);
+  e.innerHTML+=`<h2>裂隙纪元 · 完</h2><p>一千年的分离<br>一扇门的重逢<br>一片叶子的名字<br><br>银叶与暗叶<br>从来不是两个家族<br>是一个家<br>走散了一千年</p><div class="st">❤ 好感: ${state.stats.love}<br>🤝 信任: ${state.stats.trust}<br>⚔ 战斗: 3场<br>🎵 唱了一首歌<br>🌳 找到了记忆之树</div><button onclick="state.stats={love:0,trust:0};showTitle()">▶ 再来一次</button>`;
+}
+
+showTitle();
+</script>
+</body>
+</html>
